@@ -92,16 +92,8 @@ ui <- fluidPage(
                           verbatimTextOutput(outputId = "TCID50_per_mL_text")
                         ),
                         verticalLayout(
-                          HTML("<br><u><b>Equation for calculation (Spearman-Karber formula): </b></u>
-                               <br> <br>
-                               <b> TCID50 = 10 ^ (highest dilution + dilution step * ( 0.5 - ((1 / wells per dilution) * sum of the negative wells)))</b></p>
-                               TCID50/mL = TCID50 / inoculum volume (mL)
-                               where: <br>
-                               highest dilution = The value of the highest exponent as an absolute integer <br>
-                                <p style='margin-left: 110px'>e.g. in a serial ten fold dilution from 10^-1 to 10^-6, the value would be 6</p>
-                               wells per dilution = The total number of wells inoculated at each dilution</p>
-                               sum of the negative wells = The total number of wells that are free of cytopathic effect (i.e. 'negative' wells)</p>")
-                        #https://www.google.com.au/url?sa=t&rct=j&q=&esrc=s&source=web&cd=2&ved=0ahUKEwiF8N22-KbaAhXGVrwKHdB6CvgQFgg0MAE&url=https%3A%2F%2Fwww.klinikum.uni-heidelberg.de%2Ffileadmin%2Finst_hygiene%2Fmolekulare_virologie%2FDownloads%2FTCID50_calculator_v2_17-01-20_MB.xlsx&usg=AOvVaw2FecwX0Pz6446j5PoL1S29
+
+                                                  #https://www.google.com.au/url?sa=t&rct=j&q=&esrc=s&source=web&cd=2&ved=0ahUKEwiF8N22-KbaAhXGVrwKHdB6CvgQFgg0MAE&url=https%3A%2F%2Fwww.klinikum.uni-heidelberg.de%2Ffileadmin%2Finst_hygiene%2Fmolekulare_virologie%2FDownloads%2FTCID50_calculator_v2_17-01-20_MB.xlsx&usg=AOvVaw2FecwX0Pz6446j5PoL1S29
                           )
               ),
               tabPanel("EID50",
@@ -236,6 +228,28 @@ server <- function(input, output) {
       "ERROR (There must be one dilution either side of 50%)"
     }
   })
+  output$TCID50_Method_text <- renderText({
+    if ( input$TCID50_Method == "Spearman-Karber" ) {
+         HTML("<br><u><b>Equation for calculation (Spearman-Karber formula): </b></u>
+         <br> <br>
+         <b> TCID50 = 10 ^ (highest dilution + dilution step * ( 0.5 - ((1 / wells per dilution) * sum of the negative wells)))</b></p>
+         TCID50/mL = TCID50 / inoculum volume (mL)
+         where: <br>
+         highest dilution = The value of the highest exponent as an absolute integer <br>
+         <p style='margin-left: 110px'>e.g. in a serial ten fold dilution from 10^-1 to 10^-6, the value would be 6</p>
+         wells per dilution = The total number of wells inoculated at each dilution</p>
+         sum of the negative wells = The total number of wells that are free of cytopathic effect (i.e. 'negative' wells)</p>")
+    } else {
+      HTML("<br><u><b>Equation for calculation (Reed and Muench formula): </b></u>
+         <br> <br>
+           <b> TCID50 = 10 ^ (highest dilution + dilution step * ( 0.5 - ((1 / wells per dilution) * sum of the negative wells)))</b></p>
+           TCID50/mL = TCID50 / inoculum volume (mL)
+           where: <br>
+           highest dilution = The value of the highest exponent as an absolute integer <br>
+           <p style='margin-left: 110px'>e.g. in a serial ten fold dilution from 10^-1 to 10^-6, the value would be 6</p>
+           wells per dilution = The total number of wells inoculated at each dilution</p>
+           sum of the negative wells = The total number of wells that are free of cytopathic effect (i.e. 'negative' wells)</p>")
+    }
 }
 
 
