@@ -1,11 +1,4 @@
-#
-# This is a Shiny web application. You can run the application by clicking
-# the 'Run App' button above.
-#
-# Find out more about building applications with Shiny here:
-#
-#    http://shiny.rstudio.com/
-#
+
 
 library(shiny)
 library(tidyverse)
@@ -24,21 +17,21 @@ ui <- fluidPage(
                          h2('Input data'),
                          fluidRow(
                            column(3,
-                                  numericInput(inputId = "Plate1", label = "Plate 1", value = 0, min = 0, max = 1000, step = 1)
+                                  numericInput(inputId = "PFUPlate1", label = "Plate 1", value = 0, min = 0, max = 1000, step = 1)
                            ),
                            column(3, 
-                                  numericInput(inputId = "Plate2", label = "Plate 2", value = 0, min = 0, max = 1000, step = 1)
+                                  numericInput(inputId = "PFUPlate2", label = "Plate 2", value = 0, min = 0, max = 1000, step = 1)
                            ),
                            column(3,
-                                  numericInput(inputId = "Plate3", label = "Plate 3 *", value = -1, min = -1, max = 1000, step = 1)
+                                  numericInput(inputId = "PFUPlate3", label = "Plate 3 *", value = -1, min = -1, max = 1000, step = 1)
                            )
                          ),
                          fluidRow(
                            column(3,
-                                  numericInput(inputId = "Volume", label = "Inoculum (ul)", value = 0.400, min = 0, max = 2, step = 0.001)
+                                  numericInput(inputId = "PFUVolume", label = "Inoculum (ul)", value = 0.400, min = 0, max = 2, step = 0.001)
                            ),
                            column(4,
-                                  numericInput(inputId = "DilutionFactor", label = "Dilution factor (10^x)", value = -3, min = -10, max = 0, step = 1)
+                                  numericInput(inputId = "PFUDilutionFactor", label = "Dilution factor (10^x)", value = -3, min = -10, max = 0, step = 1)
                            )
                          )
                        ),
@@ -88,9 +81,13 @@ ui <- fluidPage(
                             )
                           )
                         ),
-                        uiOutput("DilutionSeries"),
+                       verticalLayout(
+                         h3('Number of infected wells')
+                       ),
+                       uiOutput("DilutionSeries"),
                         verticalLayout(
                           h2('Results'),
+                          radioButtons(inputId = "TCID50_Method", label = "Method", choices = c("Spearman-Karber", "Reed & Muench"), selected = "Spearman-Karber"),
                           verbatimTextOutput(outputId = "TCID50_text"),
                           verbatimTextOutput(outputId = "TCID50_per_mL_text")
                         ),
@@ -134,13 +131,13 @@ ui <- fluidPage(
 
 server <- function(input, output) {
 # SERVER code for PFU tab  
-  # Average the PFU from either two or three plates, depedending on the value of the plate 3 variable
+  # Average the PFU from either two or three plates, depending on the value of the plate 3 variable
   AveragePFUreactive <- reactive({
-    if (input$Plate1 != 0 && input$Plate2 != 0){
-      if (input$Plate3 == -1) {
-        ((input$Plate1 + input$Plate2) / 2)
+    if (input$PFUPlate1 != 0 && input$PFUPlate2 != 0){
+      if (input$PFUPlate3 == -1) {
+        ((input$PFUPlate1 + input$PFUPlate2) / 2)
       } else {
-        ((input$Plate1 + input$Plate2 + input$Plate3) / 3)
+        ((input$PFUPlate1 + input$PFUPlate2 + input$PFUPlate3) / 3)
       }
     } else {
       0
@@ -148,22 +145,22 @@ server <- function(input, output) {
   })
   PFU_per_ml_reactive <- reactive({
     if (AveragePFUreactive() != 0){
-      AveragePFUreactive() / (10^input$DilutionFactor * input$Volume)
+      AveragePFUreactive() / (10^input$PFUDilutionFactor * input$PFUVolume)
     } else {
       0
     }
   })
   output$PFU_per_mL <- renderText({
-    if (input$Plate1 == 0 || input$Plate2 == 0){
+    if (input$PFUPlate1 == 0 || input$PFUPlate2 == 0){
       paste0("Values of at least two counts (eg Plate 1 and Plate 2) must be greater than zero")
     } else { 
       paste0("Titre = ", round(x = PFU_per_ml_reactive(), 2), " PFU/mL\n\t10^",  round(x = log10(PFU_per_ml_reactive()), 2), " PFU/mL")
     }
   })
   output$Average_PFU <- renderText({
-    if (input$Plate1 == 0 || input$Plate2 == 0){
+    if (input$PFUPlate1 == 0 || input$PFUPlate2 == 0){
       paste("")
-    } else if (input$Plate3 == -1) {
+    } else if (input$PFUPlate3 == -1) {
       paste0("Average PFU = ", round(x = AveragePFUreactive(), 2), " PFU per well")
     } else {
       paste0("Average PFU = ", round(x = AveragePFUreactive(), 2), " PFU per well")
@@ -185,15 +182,62 @@ server <- function(input, output) {
     }
     negative
   })
+ 
+
+  TCID50_midpoint <- reactive({
+    for (i in seq(from = abs(input$DilutionLowTCID50), to = abs(input$DilutionHighTCID50), by = log10(input$DilutionFactorTCID50))) {
+      j <- i + 1
+      valhigh <- paste0("n",i)
+      vallow <- paste0("n",j)
+      # check that you haven't got the the end
+      if ( j > abs(input$DilutionHighTCID50)) {
+        returnlist <- c("ERROR 1")
+        break
+      }
+        
+      if ( input[[valhigh]] / input$WellsTCID50 > 0.5 && input[[vallow]] / input$WellsTCID50 < 0.5) {
+        highprop <- input[[valhigh]] / input$WellsTCID50
+        lowprop <- input[[vallow]] / input$WellsTCID50
+        returnlist <- c(highprop,lowprop, input[[valhigh]])
+        break
+      }
+    }
+    returnlist
+  })
+
+
   TCID50_reactive <- reactive({
-    abs(input$DilutionHighTCID50) + log10(input$DilutionFactorTCID50) * ( 0.5 - (1 / input$WellsTCID50) * TCID50_negatives())
+  if ( input$TCID50_Method == "Spearman-Karber" ) {
+        abs(input$DilutionHighTCID50) + log10(input$DilutionFactorTCID50) * ( 0.5 - (1 / input$WellsTCID50) * TCID50_negatives())
+    } else if (input$TCID50_Method == "Reed & Muench") {
+      if (TCID50_midpoint()[1] == "ERROR 1") {
+        "ERROR 1"
+      } else {
+        highprop <- as.numeric(TCID50_midpoint()[1])
+        lowprop <- as.numeric(TCID50_midpoint()[2])
+        highdilution <- as.numeric(TCID50_midpoint()[3])
+        PD <- (highprop - 0.50)/(highprop - lowprop)
+        highdilution - (PD * log10(input$DilutionFactorTCID50))
+      }
+        
+    }
   })
   output$TCID50_text <- renderText({
-    paste0("TCID50 = 10^", TCID50_reactive())
+    if ( is.numeric(TCID50_reactive())) {
+      paste0("TCID50 = 10^", TCID50_reactive())
+    } else {
+      "ERROR (There must be one dilution either side of 50%)"
+    }
   })
   output$TCID50_per_mL_text <- renderText({
-    paste0("Titre = 10^", round(log10((10^TCID50_reactive()) / input$VolumeTCID50), 2), " TCID50/mL")
+    if ( is.numeric(TCID50_reactive())) {
+      paste0("Titre = 10^", round(log10((10^TCID50_reactive()) / input$VolumeTCID50), 2), " TCID50/mL")
+    } else {
+      "ERROR (There must be one dilution either side of 50%)"
+    }
   })
 }
+
+
 # Run the application 
 shinyApp(ui = ui, server = server)
