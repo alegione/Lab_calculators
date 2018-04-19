@@ -7,7 +7,7 @@ library(tidyverse)
 ui <- fluidPage(
   
   # Application title
-  titlePanel("Virus titration calculators"),
+  titlePanel(title = "Virus titration calculators", windowTitle = "Virus titration calculators"),
   
   mainPanel(width = 20,
             tabsetPanel(
@@ -92,7 +92,7 @@ ui <- fluidPage(
                           verbatimTextOutput(outputId = "TCID50_per_mL_text")
                         ),
                         verticalLayout(
-
+                          htmlOutput(outputId = "TCID50_Method_text")
                                                   #https://www.google.com.au/url?sa=t&rct=j&q=&esrc=s&source=web&cd=2&ved=0ahUKEwiF8N22-KbaAhXGVrwKHdB6CvgQFgg0MAE&url=https%3A%2F%2Fwww.klinikum.uni-heidelberg.de%2Ffileadmin%2Finst_hygiene%2Fmolekulare_virologie%2FDownloads%2FTCID50_calculator_v2_17-01-20_MB.xlsx&usg=AOvVaw2FecwX0Pz6446j5PoL1S29
                           )
               ),
@@ -111,7 +111,7 @@ ui <- fluidPage(
               tabPanel(title = "Documentation",
                        p(h4("Virus titration calculators")),
                        HTML("This app includes an array of quick calculators for virology work
-                            <br>The formulas for each tool are included in their respective tabs,
+                            <br>The formulas for each tool are included in their respective tabs
                             <br>
                             <br>Please report errors or request changes:
                             <br>Github: <a href = https://github.com/Alegione>Github.com/Alegione</a>
@@ -233,7 +233,7 @@ server <- function(input, output) {
          HTML("<br><u><b>Equation for calculation (Spearman-Karber formula): </b></u>
          <br> <br>
          <b> TCID50 = 10 ^ (highest dilution + dilution step * ( 0.5 - ((1 / wells per dilution) * sum of the negative wells)))</b></p>
-         TCID50/mL = TCID50 / inoculum volume (mL)
+         TCID50/mL = TCID50 / inoculum volume (mL)<p>
          where: <br>
          highest dilution = The value of the highest exponent as an absolute integer <br>
          <p style='margin-left: 110px'>e.g. in a serial ten fold dilution from 10^-1 to 10^-6, the value would be 6</p>
@@ -241,17 +241,21 @@ server <- function(input, output) {
          sum of the negative wells = The total number of wells that are free of cytopathic effect (i.e. 'negative' wells)</p>")
     } else {
       HTML("<br><u><b>Equation for calculation (Reed and Muench formula): </b></u>
-         <br> <br>
-           <b> TCID50 = 10 ^ (highest dilution + dilution step * ( 0.5 - ((1 / wells per dilution) * sum of the negative wells)))</b></p>
-           TCID50/mL = TCID50 / inoculum volume (mL)
-           where: <br>
-           highest dilution = The value of the highest exponent as an absolute integer <br>
-           <p style='margin-left: 110px'>e.g. in a serial ten fold dilution from 10^-1 to 10^-6, the value would be 6</p>
-           wells per dilution = The total number of wells inoculated at each dilution</p>
-           sum of the negative wells = The total number of wells that are free of cytopathic effect (i.e. 'negative' wells)</p>")
-    }
-}
+            <br> <br>
+            <b> PD = (%>50% - 50%) / (%>50% - %<50%)</b></p>
+          
+            <b> TCID50 = 10 ^ (log10 dilution above 50% infected - (PD * log10 dilution factor))</b></p>
+            TCID50/mL = TCID50 / inoculum volume (mL)<p>
+            where: <br>
+            PD = proportionate distance between two dilutions<br>
+            %>50% = the percentage of wells infected at the dilution above 50%<br>
+            %<50% = the percentage of wells infected at the dilution below 50%<br>
+            highest dilution = The value of the highest exponent as an absolute integer <br>
+            <p style='margin-left: 110px'>e.g. in a serial ten fold dilution where the two values either side of 50% were 10^-3 to 10^-4, the value would be 3</p>")
 
+      }
+  })
+}
 
 # Run the application 
 shinyApp(ui = ui, server = server)
