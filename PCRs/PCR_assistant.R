@@ -52,7 +52,8 @@ ui <- fluidPage(
                            column(width = 3,
                                   numericInput(inputId = "dGTP_stock", label = "dGTP (mM)", value = 100, min = 0, max = 1000, step = 0.1)
                            )
-                         )
+                         ),
+                         numericInput(inputId = "dNTP_equimolar_stock", label = "Adjust for equimolar dNTPs (mM)", min = 0, max = 1000, value = 100, step = 0.1)
                        ),
                        verticalLayout(
                          h3("Desired concentration of each dNTP in working solution"),
@@ -68,12 +69,14 @@ ui <- fluidPage(
                            ),
                            column(width = 3,
                                   numericInput(inputId = "dGTP_working", label = "dGTP (mM)", value = 1.25, min = 0, max = 1000, step = 0.01)
+                                  
                            )
-                         )
+                         ),
+                         numericInput(inputId = "dNTP_equimolar_working", label = "Adjust for equimolar dNTPs (mM)", min = 0, max = 1000, value = 1.25, step = 0.05)
                        ),
                        verticalLayout(
                          h3("Desired volume of working solution"),
-                         numericInput(inputId = "Working_volume", label = "Working volume (uL)", value = 800, min = 0, max = 10000, step = 1)
+                         numericInput(inputId = "dNTP_Working_volume", label = "Working volume (uL)", value = 800, min = 0, max = 10000, step = 1)
                        ),
                        verticalLayout(
                          h3("Therefore:"),
@@ -82,7 +85,7 @@ ui <- fluidPage(
                                 textOutput(outputId = "dTTP_volume"),
                                 textOutput(outputId = "dCTP_volume"),
                                 textOutput(outputId = "dGTP_volume"),
-                                textOutput(outputId = "water_volume")
+                                textOutput(outputId = "dNTP_water_volume")
                          )
                        )
 
@@ -102,36 +105,49 @@ ui <- fluidPage(
   
 )
 
-server <- function(input, output) {
-  # SERVER code for dNTP tab  
+server <- function(input, output, session) {
+  # SERVER code for dNTP tab
+  observeEvent(input$dNTP_equimolar_stock, {
+    updateNumericInput(session, "dATP_stock", value = input$dNTP_equimolar_stock)
+    updateNumericInput(session, "dTTP_stock", value = input$dNTP_equimolar_stock)
+    updateNumericInput(session, "dCTP_stock", value = input$dNTP_equimolar_stock)
+    updateNumericInput(session, "dGTP_stock", value = input$dNTP_equimolar_stock)
+  })
+  observeEvent(input$dNTP_equimolar_working, {
+    updateNumericInput(session, "dATP_working", value = input$dNTP_equimolar_working)
+    updateNumericInput(session, "dTTP_working", value = input$dNTP_equimolar_working)
+    updateNumericInput(session, "dCTP_working", value = input$dNTP_equimolar_working)
+    updateNumericInput(session, "dGTP_working", value = input$dNTP_equimolar_working)
+  })
+  
   vol_ATP <- reactive({
-    input$Working_volume * input$dATP_working / input$dATP_stock
+    input$dNTP_Working_volume * input$dATP_working / input$dATP_stock
   })
   vol_TTP <- reactive({
-    input$Working_volume * input$dTTP_working / input$dTTP_stock
+    input$dNTP_Working_volume * input$dTTP_working / input$dTTP_stock
   })
   vol_CTP <- reactive({
-    input$Working_volume * input$dCTP_working / input$dCTP_stock
+    input$dNTP_Working_volume * input$dCTP_working / input$dCTP_stock
   })
   vol_GTP <- reactive({
-    input$Working_volume * input$dGTP_working / input$dGTP_stock
+    input$dNTP_Working_volume * input$dGTP_working / input$dGTP_stock
   })
   
   output$dATP_volume <- renderText({
-    paste("Add", vol_ATP(), "ul of dATP stock")
+    paste("Add", round(x = vol_ATP(), 2), "ul of", input$dATP_stock, "mM dATP stock")
   })
   output$dTTP_volume <- renderText({
-    paste("Add", vol_TTP(), "ul of dTTP stock")
+    paste("Add", round(x = vol_TTP(), 2), "ul of", input$dTTP_stock, "mM dTTP stock")
   })
   output$dCTP_volume <- renderText({
-    paste("Add", vol_CTP(), "ul of dCTP stock")
+    paste("Add", round(x = vol_CTP(), 2), "ul of", input$dCTP_stock, "mM dCTP stock")
   })
   output$dGTP_volume <- renderText({
-    paste("Add", vol_GTP(), "ul of dGTP stock")
+    paste("Add", round(x = vol_GTP(), 2), "ul of", input$dGTP_stock, "mM dGTP stock")
   })
-  output$water_volume <- renderText({
-    vol_water <- input$Working_volume - vol_ATP() - vol_TTP() - vol_CTP() - vol_GTP()
-    paste("Add", vol_water, "ul molecular biology grade water")
+  output$dNTP_water_volume <- renderText({
+    dNTP_vol_water <- input$dNTP_Working_volume - vol_ATP() - vol_TTP() - vol_CTP() - vol_GTP()
+    paste("Add", round(x = dNTP_vol_water, 2), "ul molecular biology grade water")
   })
    
   
