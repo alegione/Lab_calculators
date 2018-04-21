@@ -4,6 +4,8 @@ library(shiny)
 library(tidyverse)
 library(shinyjs)
 library(data.table)
+#library(gridExtra)
+library(xlsx)
 
 
 # jsCode <- 'shinyjs.winprint = function(){
@@ -57,8 +59,8 @@ ui <- fluidPage(
                          column(width = 2,
                                 h4("Working Stock")
                                 ),
-                         column(width = 3, offset = 1,
-                                h4("PCR concentrations")
+                         column(width = 2, offset = 1,
+                                h4("PCR conc.")
                                 ),
                          column(width = 2, offset = 1,
                                 h4("uL/reaction")
@@ -74,14 +76,16 @@ ui <- fluidPage(
                          column(width = 1, 
                                 p("uM", style="padding-top:5px;padding-bottom:5px;padding-left;0px")
                          ),
-                         column(width = 3,
+                         column(width = 2,
                                 numericInput(inputId = "Fprimer_PCR_concentration", label = NULL, value = 1, min = 0, max = 10, step = 0.01)
                          ),
                          column(width = 1, 
                                 p("uM", style="padding-top:5px;padding-bottom:5px;padding-left;0px")
                          ),
-                         column(width = 2, align = "center",
-                                textOutput("Fprimer_PCR_volume_sample")
+                         column(width = 1, align = "right",
+                                div(style="padding-top:5px;padding-bottom:5px;padding-left;0px",
+                                    textOutput("Fprimer_PCR_volume_sample")
+                                )
                          ),
                          column(width = 1, 
                                 p("uL", style="padding-top:5px;padding-bottom:5px;padding-left;0px")
@@ -98,14 +102,16 @@ ui <- fluidPage(
                          column(width = 1, 
                                 p("uM", style="padding-top:5px;padding-bottom:5px;padding-left;0px")
                          ),
-                         column(width = 3,
+                         column(width = 2,
                                 numericInput(inputId = "Rprimer_PCR_concentration", label = NULL, value = 1, min = 0, max = 10, step = 0.01)
                          ),
                          column(width = 1, 
                                 p("uM", style="padding-top:5px;padding-bottom:5px;padding-left;0px")
                          ),
-                         column(width = 2, align = "center",
-                                textOutput("Rprimer_PCR_volume_sample")
+                         column(width = 1, align = "right",
+                                div(style="padding-top:5px;padding-bottom:5px;padding-left;0px",
+                                    textOutput("Rprimer_PCR_volume_sample")
+                                )
                          ),
                          column(width = 1, 
                                 p("uL", style="padding-top:5px;padding-bottom:5px;padding-left;0px")
@@ -121,14 +127,16 @@ ui <- fluidPage(
                          column(width = 1, 
                                 p("mM", style="padding-top:5px;padding-bottom:5px;padding-left;0px")
                          ),
-                         column(width = 3,
+                         column(width = 2,
                                 numericInput(inputId = "MgCl_PCR_concentration", label = NULL, value = 2, min = 0, max = 10, step = 0.01)
                          ),
                          column(width = 1, 
                                 p("mM", style="padding-top:5px;padding-bottom:5px;padding-left;0px")
                          ),
-                         column(width = 2, align = "center",
-                                textOutput("MgCl_PCR_volume_sample")
+                         column(width = 1, align = "right",
+                                div(style="padding-top:5px;padding-bottom:5px;padding-left;0px",
+                                  textOutput("MgCl_PCR_volume_sample")
+                                )
                          ),
                          column(width = 1, 
                                 p("uL", style="padding-top:5px;padding-bottom:5px;padding-left;0px")
@@ -144,14 +152,16 @@ ui <- fluidPage(
                          column(width = 1, 
                                 p("mM", style="padding-top:5px;padding-bottom:5px;padding-left;0px")
                          ),
-                         column(width = 3,
+                         column(width = 2,
                                 numericInput(inputId = "dNTP_PCR_concentration", label = NULL, value = 200, min = 0, max = 1000, step = 1)
                          ),
                          column(width = 1, 
                                 p("uM", style="padding-top:5px;padding-bottom:5px;padding-left;0px")
                          ),
-                         column(width = 2, align = "center",
-                                textOutput("dNTP_PCR_volume_sample")
+                         column(width = 1, align = "right",
+                                div(style="padding-top:5px;padding-bottom:5px;padding-left;0px",
+                                  textOutput("dNTP_PCR_volume_sample")
+                                )
                          ),
                          column(width = 1, 
                                 p("uL", style="padding-top:5px;padding-bottom:5px;padding-left;0px")
@@ -167,14 +177,16 @@ ui <- fluidPage(
                          column(width = 1, 
                                 p("X", style="padding-top:5px;padding-bottom:5px;padding-left;0px")
                          ),
-                         column(width = 3,
+                         column(width = 2,
                                 numericInput(inputId = "buffer_PCR_concentration", label = NULL, value = 1, min = 0, max = 10, step = 0.01)
                          ),
                          column(width = 1, 
                                 p("X", style="padding-top:5px;padding-bottom:5px;padding-left;0px")
                          ),
-                         column(width = 2, align = "center",
-                                textOutput("buffer_PCR_volume_sample")
+                         column(width = 1, align = "right",
+                                div(style="padding-top:5px;padding-bottom:5px;padding-left;0px",
+                                  textOutput("buffer_PCR_volume_sample")
+                                )
                          ),
                          column(width = 1, 
                                 p("uL", style="padding-top:5px;padding-bottom:5px;padding-left;0px")
@@ -190,14 +202,16 @@ ui <- fluidPage(
                          column(width = 1, 
                                 p("Units/uL", style="padding-top:5px;padding-bottom:5px;padding-left;0px")
                          ),
-                         column(width = 3,
+                         column(width = 2,
                                 numericInput(inputId = "enzyme_PCR_concentration", label = NULL, value = 0.05, min = 0, max = 10, step = 0.001)
                          ),
                          column(width = 1, 
                                 p("Units/uL", style="padding-top:5px;padding-bottom:5px;padding-left;0px")
                          ),
-                         column(width = 2, align = "center",
-                                textOutput("enzyme_PCR_volume_sample")
+                         column(width = 1, align = "right",
+                                div(style="padding-top:5px;padding-bottom:5px;padding-left;0px",
+                                  textOutput("enzyme_PCR_volume_sample")
+                                )
                          ),
                          column(width = 1, 
                                 p("uL", style="padding-top:5px;padding-bottom:5px;padding-left;0px")
@@ -207,16 +221,28 @@ ui <- fluidPage(
                          column(width = 2,
                                 strong("Water")
                          ),
-                         column(width = 2, offset = 7,  align = "center",
-                                textOutput("water_PCR_volume_sample")
+                         column(width = 1, offset = 6,  align = "right",
+                                div(style="padding-top:5px;padding-bottom:5px;padding-left;0px",
+                                  textOutput("water_PCR_volume_sample")
+                                )
                          ),
                          column(width = 1, 
                                 p("uL", style="padding-top:5px;padding-bottom:5px;padding-left;0px")
                          )
                        ),
                        tags$hr(style="border-color: black;"),
-                       tableOutput("PCR_setup_table"),
+                       fixedRow(
+                         column(width = 4,
+                                tableOutput(outputId = "PCR_setup_table")
+                         ),
+                         column(width = 2,
+                                downloadButton(outputId = "PCR_protocol_download_tsv", label = "Save protocol to sheet"),
+                                p(),
+                                downloadButton(outputId = "PCR_protocol_download_xlsx", label = "Save protocol to excel")
+                         )
+                       ),
                        textOutput("PCR_volume_instructions")
+                       
               ),
               tabPanel(title = "Primer dilutions", icon = NULL,
                        verticalLayout(
@@ -389,6 +415,22 @@ server <- function(input, output, session) {
   output$PCR_volume_instructions <- renderText({
     paste("Add", input$PCR_tube_volume - input$Template_volume, "ul of mastermix per tube")
   })
+  output$PCR_protocol_download_tsv <- downloadHandler(
+    filename = function() {
+      paste("PCR_protocol_", Sys.Date(), ".tsv", sep = "")
+    },
+    content = function(file) {
+      write_tsv(PCR_table_reactive(), file)
+    }
+  )
+  output$PCR_protocol_download_xlsx <- downloadHandler(
+    filename = function() {
+      paste("PCR_protocol_", Sys.Date(), ".xlsx", sep = "")
+    },
+    content = function(file) {
+      write_xlsx(PCR_table_reactive(), file, sheetName = "PCR_protocol")
+    }
+  )
   # SERVER code for primer tab
   output$primer_stock_water <- renderText({
     primer_neat_to_stock <- (input$primer_neat_concentration * 1000) / input$primer_stock_concentration
@@ -397,7 +439,7 @@ server <- function(input, output, session) {
   output$primer_working_water <- renderText({
     primer_stock_to_working <- input$primer_working_concentration * input$primer_working_volume / input$primer_stock_concentration
   })
-  
+
   # SERVER code for dNTP tab
   observeEvent(input$dNTP_equimolar_stock, {
     updateNumericInput(session, "dATP_stock", value = input$dNTP_equimolar_stock)
