@@ -235,13 +235,14 @@ ui <- fluidPage(
                          column(width = 4,
                                 tableOutput(outputId = "PCR_setup_table")
                          ),
-                         column(width = 2,
+                         column(width = 4,
+                                em(textOutput("PCR_volume_instructions")),
                                 downloadButton(outputId = "PCR_protocol_download_tsv", label = "Save protocol to sheet"),
                                 p(),
                                 downloadButton(outputId = "PCR_protocol_download_xlsx", label = "Save protocol to excel")
                          )
-                       ),
-                       textOutput("PCR_volume_instructions")
+                       )
+                       
                        
               ),
               tabPanel(title = "Primer dilutions", icon = NULL,
@@ -404,7 +405,8 @@ server <- function(input, output, session) {
         PCRtable <- data.table(
         Reagent = c("Forward Primer", "Reverse Primer", "MgCl", "dNTP", "Buffer", "Enzyme", "Water", "Total"),
         Conc. = c(paste(input$Fprimer_PCR_concentration, "uM"),paste(input$Rprimer_PCR_concentration, "uM"),paste(input$MgCl_PCR_concentration, "mM"),paste(input$dNTP_PCR_concentration, "uM"),paste(input$buffer_PCR_concentration, "X"),paste(input$enzyme_PCR_concentration, "U/uL"),"",""),
-        Volume = c(c(Fprimer_vol_reactive(), Rprimer_vol_reactive(), MgCl_vol_reactive(), dNTP_vol_reactive(), buffer_vol_reactive(), enzyme_vol_reactive(), water_vol_reactive()) * PCR_multiplier(), c(sum_PCR_Vol))
+        Volume = c(c(Fprimer_vol_reactive(), Rprimer_vol_reactive(), MgCl_vol_reactive(), dNTP_vol_reactive(), buffer_vol_reactive(), enzyme_vol_reactive(), water_vol_reactive()) * PCR_multiplier(), c(sum_PCR_Vol)),
+        ul = c("uL")
         )
     )
   })
@@ -413,7 +415,7 @@ server <- function(input, output, session) {
     PCR_table_reactive()
   })
   output$PCR_volume_instructions <- renderText({
-    paste("Add", input$PCR_tube_volume - input$Template_volume, "ul of mastermix per tube")
+    paste("Add", input$PCR_tube_volume - input$Template_volume, "uL of mastermix per tube")
   })
   output$PCR_protocol_download_tsv <- downloadHandler(
     filename = function() {
@@ -428,7 +430,7 @@ server <- function(input, output, session) {
       paste("PCR_protocol_", Sys.Date(), ".xlsx", sep = "")
     },
     content = function(file) {
-      write_xlsx(PCR_table_reactive(), file, sheetName = "PCR_protocol")
+      write.xlsx(PCR_table_reactive(), file, sheetName = "PCR_protocol", row.names = FALSE)
     }
   )
   # SERVER code for primer tab
