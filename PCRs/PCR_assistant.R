@@ -470,20 +470,20 @@ server <- function(input, output, session) {
   })
   
   output$dATP_volume <- renderText({
-    paste("Add", round(x = vol_ATP(), 2), "ul of", input$dATP_stock, "mM dATP stock")
+    paste("Add", round(x = vol_ATP(), 2), "uL of", input$dATP_stock, "mM dATP stock")
   })
   output$dTTP_volume <- renderText({
-    paste("Add", round(x = vol_TTP(), 2), "ul of", input$dTTP_stock, "mM dTTP stock")
+    paste("Add", round(x = vol_TTP(), 2), "uL of", input$dTTP_stock, "mM dTTP stock")
   })
   output$dCTP_volume <- renderText({
-    paste("Add", round(x = vol_CTP(), 2), "ul of", input$dCTP_stock, "mM dCTP stock")
+    paste("Add", round(x = vol_CTP(), 2), "uL of", input$dCTP_stock, "mM dCTP stock")
   })
   output$dGTP_volume <- renderText({
-    paste("Add", round(x = vol_GTP(), 2), "ul of", input$dGTP_stock, "mM dGTP stock")
+    paste("Add", round(x = vol_GTP(), 2), "uL of", input$dGTP_stock, "mM dGTP stock")
   })
   output$dNTP_water_volume <- renderText({
     dNTP_vol_water <- input$dNTP_Working_volume - vol_ATP() - vol_TTP() - vol_CTP() - vol_GTP()
-    paste("Add", round(x = dNTP_vol_water, 2), "ul molecular biology grade water")
+    paste("Add", round(x = dNTP_vol_water, 2), "uL molecular biology grade water")
   })
    
   
