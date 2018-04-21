@@ -33,8 +33,35 @@ ui <- fluidPage(
               tabPanel(title = "PCR Protocol set up", icon = NULL
                        
               ),
-              tabPanel(title = "Primer dilutions", icon = NULL
-                       
+              tabPanel(title = "Primer dilutions", icon = NULL,
+                       verticalLayout(
+                         h3("Making up working stock from new primers"),
+                         p("Concentration of lyophilised primer (nmol)"),
+                         fluidRow(
+                           column(width = 3,
+                                  numericInput(inputId = "primer_neat_concentration", label = NULL, value = 30, min = 0, max = 100, step = 0.1)
+                           )
+                         ),
+                         br(),
+                         p("Desired concentration of stock solution (uM)"),
+                         fluidRow(
+                           column(width = 3,
+                                  numericInput(inputId = "primer_stock_concentration", label = NULL, value = 100, min = 0, max = 1000, step = 1)                           )
+                         ),
+                         verbatimTextOutput("primer_stock_water"),
+                         br(),
+                         p("Desired composition of working solution"),
+                         fluidRow(
+                           column(width = 3,
+                                  numericInput(inputId = "primer_working_concentration", label = "Concentation (uM)", value = 100, min = 0, max = 1000, step = 1)
+                           ),
+                           column(width = 3,
+                                  numericInput(inputId = "primer_working_volume", label = "Volume (uL)", value = 1000, min = 0, max = 10000, step = 1)
+                           )
+                          ),
+                         br(),
+                         verbatimTextOutput("primer_working_water")
+                       )
               ),
               tabPanel(title = "dNTP dilutions", icon = NULL,
                        verticalLayout(
@@ -106,6 +133,16 @@ ui <- fluidPage(
 )
 
 server <- function(input, output, session) {
+  # SERVER code for primer tab
+  output$primer_stock_water <- renderText({
+    primer_neat_to_stock <- (input$primer_neat_concentration * 1000) / input$primer_stock_concentration
+    paste("Add", primer_neat_to_stock, "uL of water to make", input$primer_stock_concentration, "uM (pmol/uL) primer stock")
+  })
+  output$primer_working_water <- renderText({
+    primer_stock_to_working <- input$primer_working_concentration * input$primer_working_volume / input$primer_stock_concentration
+    paste("Add", primer_stock_to_working, "uL of", input$primer_stock_concentration, "uM stock, to make", input$primer_working_concentration, "uM (pmol/uL) primer")
+  })
+  
   # SERVER code for dNTP tab
   observeEvent(input$dNTP_equimolar_stock, {
     updateNumericInput(session, "dATP_stock", value = input$dNTP_equimolar_stock)
