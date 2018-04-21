@@ -406,7 +406,7 @@ server <- function(input, output, session) {
         Reagent = c("Forward Primer", "Reverse Primer", "MgCl", "dNTP", "Buffer", "Enzyme", "Water", "Total"),
         Conc. = c(paste(input$Fprimer_PCR_concentration, "uM"),paste(input$Rprimer_PCR_concentration, "uM"),paste(input$MgCl_PCR_concentration, "mM"),paste(input$dNTP_PCR_concentration, "uM"),paste(input$buffer_PCR_concentration, "X"),paste(input$enzyme_PCR_concentration, "U/uL"),"",""),
         Volume = c(c(Fprimer_vol_reactive(), Rprimer_vol_reactive(), MgCl_vol_reactive(), dNTP_vol_reactive(), buffer_vol_reactive(), enzyme_vol_reactive(), water_vol_reactive()) * PCR_multiplier(), c(sum_PCR_Vol)),
-        ul = c("uL")
+        uL = c("uL")
         )
     )
   })
