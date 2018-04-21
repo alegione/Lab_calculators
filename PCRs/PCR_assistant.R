@@ -3,6 +3,7 @@
 library(shiny)
 library(tidyverse)
 library(shinyjs)
+library(data.table)
 
 
 # jsCode <- 'shinyjs.winprint = function(){
@@ -25,27 +26,211 @@ library(shinyjs)
 
 # Define UI for application
 ui <- fluidPage(
-  # Application title
+  useShinyjs(),
+  inlineCSS(list('.form-control' = 'padding:5px; text-align: center;')),
+
+# Application title
   titlePanel(title = "PCR assistant", windowTitle = "PCR assistant"),
   
   mainPanel(width = 20,
             tabsetPanel(
-              tabPanel(title = "PCR Protocol set up", icon = NULL
-                       
+              tabPanel(title = "PCR Protocol set up", icon = NULL,
+                       h3("Convential PCR set up tool"),
+                       fixedRow(
+                         column(width = 2,
+                                numericInput(inputId = "PCR_tube_volume", label = "Reaction volume", value = 25, min = 0, max = 200, step = 1)
+                         ),
+                         column(width = 2,
+                                numericInput(inputId = "Template_volume", label = "Template volume", value = 5, min = 0, max = 200, step = 0.1)
+                         ),
+                         column(width = 2,
+                                numericInput(inputId = "PCR_samples", label = "PCR samples", value = 8, min = 0, max = 1000, step = 1)
+                         ),
+                         column(width = 2,
+                                numericInput(inputId = "PCR_extra", label = "Extra volume (%)", value = 10, min = 0, max = 100, step = 1)
+                         )
+                       ),
+                       fixedRow(
+                         column(width = 2,
+                                h4("Reagent")
+                                ),
+                         column(width = 2,
+                                h4("Working Stock")
+                                ),
+                         column(width = 3, offset = 1,
+                                h4("PCR concentrations")
+                                ),
+                         column(width = 2, offset = 1,
+                                h4("uL/reaction")
+                                )
+                       ),
+                       fixedRow(
+                         column(width = 2,
+                                strong("Forward primer")
+                         ),
+                         column(width = 2,
+                                numericInput(inputId = "Fprimer_working_concentration", label = NULL, value = 10, min = 0, max = 1000, step = 1)
+                                ),
+                         column(width = 1, 
+                                p("uM", style="padding-top:5px;padding-bottom:5px;padding-left;0px")
+                         ),
+                         column(width = 3,
+                                numericInput(inputId = "Fprimer_PCR_concentration", label = NULL, value = 1, min = 0, max = 10, step = 0.01)
+                         ),
+                         column(width = 1, 
+                                p("uM", style="padding-top:5px;padding-bottom:5px;padding-left;0px")
+                         ),
+                         column(width = 2, align = "center",
+                                textOutput("Fprimer_PCR_volume_sample")
+                         ),
+                         column(width = 1, 
+                                p("uL", style="padding-top:5px;padding-bottom:5px;padding-left;0px")
+                         )
+                       ),
+                       fixedRow(
+                         column(width = 2,
+                                strong("Reverse primer")
+                         ),
+                         
+                         column(width = 2,
+                                numericInput(inputId = "Rprimer_working_concentration", label = NULL, value = 10, min = 0, max = 1000, step = 1)
+                         ),
+                         column(width = 1, 
+                                p("uM", style="padding-top:5px;padding-bottom:5px;padding-left;0px")
+                         ),
+                         column(width = 3,
+                                numericInput(inputId = "Rprimer_PCR_concentration", label = NULL, value = 1, min = 0, max = 10, step = 0.01)
+                         ),
+                         column(width = 1, 
+                                p("uM", style="padding-top:5px;padding-bottom:5px;padding-left;0px")
+                         ),
+                         column(width = 2, align = "center",
+                                textOutput("Rprimer_PCR_volume_sample")
+                         ),
+                         column(width = 1, 
+                                p("uL", style="padding-top:5px;padding-bottom:5px;padding-left;0px")
+                         )
+                       ),
+                       fixedRow(
+                         column(width = 2,
+                                strong("Magnesium Chloride")
+                         ),
+                         column(width = 2,
+                                numericInput(inputId = "MgCl_working_concentration", label = NULL, value = 25, min = 0, max = 1000, step = 1)
+                         ),
+                         column(width = 1, 
+                                p("mM", style="padding-top:5px;padding-bottom:5px;padding-left;0px")
+                         ),
+                         column(width = 3,
+                                numericInput(inputId = "MgCl_PCR_concentration", label = NULL, value = 2, min = 0, max = 10, step = 0.01)
+                         ),
+                         column(width = 1, 
+                                p("mM", style="padding-top:5px;padding-bottom:5px;padding-left;0px")
+                         ),
+                         column(width = 2, align = "center",
+                                textOutput("MgCl_PCR_volume_sample")
+                         ),
+                         column(width = 1, 
+                                p("uL", style="padding-top:5px;padding-bottom:5px;padding-left;0px")
+                         )
+                       ),
+                       fixedRow(
+                         column(width = 2,
+                                strong("dNTPs")
+                         ),
+                         column(width = 2,
+                                numericInput(inputId = "dNTP_working_concentration", label = NULL, value = 1.25, min = 0, max = 50, step = 0.01)
+                         ),
+                         column(width = 1, 
+                                p("mM", style="padding-top:5px;padding-bottom:5px;padding-left;0px")
+                         ),
+                         column(width = 3,
+                                numericInput(inputId = "dNTP_PCR_concentration", label = NULL, value = 200, min = 0, max = 1000, step = 1)
+                         ),
+                         column(width = 1, 
+                                p("uM", style="padding-top:5px;padding-bottom:5px;padding-left;0px")
+                         ),
+                         column(width = 2, align = "center",
+                                textOutput("dNTP_PCR_volume_sample")
+                         ),
+                         column(width = 1, 
+                                p("uL", style="padding-top:5px;padding-bottom:5px;padding-left;0px")
+                         )
+                       ),
+                       fixedRow(
+                         column(width = 2,
+                                strong("PCR Buffer")
+                         ),
+                         column(width = 2,
+                                numericInput(inputId = "buffer_working_concentration", label = NULL, value = 5, min = 0, max = 1000, step = 1)
+                         ),
+                         column(width = 1, 
+                                p("X", style="padding-top:5px;padding-bottom:5px;padding-left;0px")
+                         ),
+                         column(width = 3,
+                                numericInput(inputId = "buffer_PCR_concentration", label = NULL, value = 1, min = 0, max = 10, step = 0.01)
+                         ),
+                         column(width = 1, 
+                                p("X", style="padding-top:5px;padding-bottom:5px;padding-left;0px")
+                         ),
+                         column(width = 2, align = "center",
+                                textOutput("buffer_PCR_volume_sample")
+                         ),
+                         column(width = 1, 
+                                p("uL", style="padding-top:5px;padding-bottom:5px;padding-left;0px")
+                         )
+                       ),
+                       fixedRow(
+                         column(width = 2,
+                                strong("PCR Enzyme")
+                         ),
+                         column(width = 2,
+                                numericInput(inputId = "enzyme_working_concentration", label = NULL, value = 5, min = 0, max = 100, step = 0.01)
+                         ),
+                         column(width = 1, 
+                                p("Units/uL", style="padding-top:5px;padding-bottom:5px;padding-left;0px")
+                         ),
+                         column(width = 3,
+                                numericInput(inputId = "enzyme_PCR_concentration", label = NULL, value = 0.05, min = 0, max = 10, step = 0.001)
+                         ),
+                         column(width = 1, 
+                                p("Units/uL", style="padding-top:5px;padding-bottom:5px;padding-left;0px")
+                         ),
+                         column(width = 2, align = "center",
+                                textOutput("enzyme_PCR_volume_sample")
+                         ),
+                         column(width = 1, 
+                                p("uL", style="padding-top:5px;padding-bottom:5px;padding-left;0px")
+                         )
+                       ),
+                       fixedRow(
+                         column(width = 2,
+                                strong("Water")
+                         ),
+                         column(width = 2, offset = 7,  align = "center",
+                                textOutput("water_PCR_volume_sample")
+                         ),
+                         column(width = 1, 
+                                p("uL", style="padding-top:5px;padding-bottom:5px;padding-left;0px")
+                         )
+                       ),
+                       tags$hr(style="border-color: black;"),
+                       tableOutput("PCR_setup_table"),
+                       textOutput("PCR_volume_instructions")
               ),
               tabPanel(title = "Primer dilutions", icon = NULL,
                        verticalLayout(
                          h3("Making up working stock from new primers"),
                          p("Concentration of lyophilised primer (nmol)"),
                          fluidRow(
-                           column(width = 3,
+                           column(width = 2, offset = 1,
                                   numericInput(inputId = "primer_neat_concentration", label = NULL, value = 30, min = 0, max = 100, step = 0.1)
                            )
                          ),
                          br(),
                          p("Desired concentration of stock solution (uM)"),
                          fluidRow(
-                           column(width = 3,
+                           column(width = 2, offset = 1,
                                   numericInput(inputId = "primer_stock_concentration", label = NULL, value = 100, min = 0, max = 1000, step = 1)                           )
                          ),
                          verbatimTextOutput("primer_stock_water"),
@@ -67,16 +252,16 @@ ui <- fluidPage(
                        verticalLayout(
                          h3("Concentration of stock dNTPs"),
                          fluidRow(
-                           column(width = 3,
+                           column(width = 2,
                                   numericInput(inputId = "dATP_stock", label = "dATP (mM)", value = 100, min = 0, max = 1000, step = 0.1)
                            ),
-                           column(width = 3,
+                           column(width = 2,
                                   numericInput(inputId = "dTTP_stock", label = "dTTP (mM)", value = 100, min = 0, max = 1000, step = 0.1)
                            ),
-                           column(width = 3,
+                           column(width = 2,
                                   numericInput(inputId = "dCTP_stock", label = "dCTP (mM)", value = 100, min = 0, max = 1000, step = 0.1)
                            ),
-                           column(width = 3,
+                           column(width = 2,
                                   numericInput(inputId = "dGTP_stock", label = "dGTP (mM)", value = 100, min = 0, max = 1000, step = 0.1)
                            )
                          ),
@@ -132,7 +317,78 @@ ui <- fluidPage(
   
 )
 
+Volume1Calc <- function(C1,C2,V2) {
+  (C2 * V2) / C1
+  }
+
 server <- function(input, output, session) {
+  # SERVER code for PCR protocol tab
+  Fprimer_vol_reactive <- reactive({
+    Volume1Calc(V2 = input$PCR_tube_volume, C1 = input$Fprimer_working_concentration, C2 = input$Fprimer_PCR_concentration)
+    })
+  Rprimer_vol_reactive <- reactive({
+    Volume1Calc(V2 = input$PCR_tube_volume, C1 = input$Rprimer_working_concentration, C2 = input$Rprimer_PCR_concentration)
+    })
+  MgCl_vol_reactive <- reactive({
+    Volume1Calc(V2 = input$PCR_tube_volume, C1 = input$MgCl_working_concentration, C2 = input$MgCl_PCR_concentration)
+    })
+  dNTP_vol_reactive <- reactive({
+    Volume1Calc(V2 = input$PCR_tube_volume, C1 = input$dNTP_working_concentration * 1000, C2 = input$dNTP_PCR_concentration)
+    })
+  buffer_vol_reactive <- reactive({
+    Volume1Calc(V2 = input$PCR_tube_volume, C1 = input$buffer_working_concentration, C2 = input$buffer_PCR_concentration)
+    })
+  enzyme_vol_reactive <- reactive({
+    Volume1Calc(V2 = input$PCR_tube_volume, C1 = input$enzyme_working_concentration, C2 = input$enzyme_PCR_concentration)
+    })
+  water_vol_reactive <- reactive({
+    input$PCR_tube_volume - input$Template_volume - Fprimer_vol_reactive() - Rprimer_vol_reactive() - MgCl_vol_reactive() - dNTP_vol_reactive() - buffer_vol_reactive() - enzyme_vol_reactive()
+    })
+  output$Fprimer_PCR_volume_sample <- renderText({
+    Fprimer_vol_reactive()
+    })
+  output$Rprimer_PCR_volume_sample <- renderText({
+    Rprimer_vol_reactive()
+    })
+  output$MgCl_PCR_volume_sample <- renderText({
+    MgCl_vol_reactive()
+    })
+  output$dNTP_PCR_volume_sample <- renderText({
+    dNTP_vol_reactive()
+    })
+  output$buffer_PCR_volume_sample <- renderText({
+    buffer_vol_reactive()
+    })
+  output$enzyme_PCR_volume_sample <- renderText({
+    enzyme_vol_reactive()
+    })
+  output$water_PCR_volume_sample <- renderText({
+    water_vol_reactive()
+  })
+  PCR_multiplier <- reactive({
+    if (input$PCR_extra != 0) {
+      input$PCR_samples * ( 1 + (input$PCR_extra / 100))
+    } else {
+      input$PCR_samples
+    }
+  })
+  PCR_table_reactive <- reactive({
+    sum_PCR_Vol <- sum(Fprimer_vol_reactive(), Rprimer_vol_reactive(), MgCl_vol_reactive(), dNTP_vol_reactive(), buffer_vol_reactive(), enzyme_vol_reactive(), water_vol_reactive(), na.rm = TRUE) * PCR_multiplier()
+    (
+        PCRtable <- data.table(
+        Reagent = c("Forward Primer", "Reverse Primer", "MgCl", "dNTP", "Buffer", "Enzyme", "Water", "Total"),
+        Conc. = c(paste(input$Fprimer_PCR_concentration, "uM"),paste(input$Rprimer_PCR_concentration, "uM"),paste(input$MgCl_PCR_concentration, "mM"),paste(input$dNTP_PCR_concentration, "uM"),paste(input$buffer_PCR_concentration, "X"),paste(input$enzyme_PCR_concentration, "U/uL"),"",""),
+        Volume = c(c(Fprimer_vol_reactive(), Rprimer_vol_reactive(), MgCl_vol_reactive(), dNTP_vol_reactive(), buffer_vol_reactive(), enzyme_vol_reactive(), water_vol_reactive()) * PCR_multiplier(), c(sum_PCR_Vol))
+        )
+    )
+  })
+  
+  output$PCR_setup_table <- renderTable({
+    PCR_table_reactive()
+  })
+  output$PCR_volume_instructions <- renderText({
+    paste("Add", input$PCR_tube_volume - input$Template_volume, "ul of mastermix per tube")
+  })
   # SERVER code for primer tab
   output$primer_stock_water <- renderText({
     primer_neat_to_stock <- (input$primer_neat_concentration * 1000) / input$primer_stock_concentration
@@ -140,7 +396,6 @@ server <- function(input, output, session) {
   })
   output$primer_working_water <- renderText({
     primer_stock_to_working <- input$primer_working_concentration * input$primer_working_volume / input$primer_stock_concentration
-    paste("Add", primer_stock_to_working, "uL of", input$primer_stock_concentration, "uM stock, to make", input$primer_working_concentration, "uM (pmol/uL) primer")
   })
   
   # SERVER code for dNTP tab
