@@ -28,7 +28,7 @@ ui <- fluidPage(
                          ),
                          fluidRow(
                            column(3,
-                                  numericInput(inputId = "PFUVolume", label = "Inoculum (ul)", value = 0.400, min = 0, max = 2, step = 0.001)
+                                  numericInput(inputId = "PFUVolume", label = "Inoculum (mL)", value = 0.400, min = 0, max = 2, step = 0.001)
                            ),
                            column(4,
                                   numericInput(inputId = "PFUDilutionFactor", label = "Dilution factor (10^x)", value = -3, min = -10, max = 0, step = 1)
