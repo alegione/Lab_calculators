@@ -37,7 +37,7 @@ ui <- fluidPage(
   mainPanel(width = 20,
             tabsetPanel(
               tabPanel(title = "PCR Protocol set up", icon = NULL,
-                       h3("Convential PCR set up tool"),
+                       h3("PCR set up tool"),
                        fixedRow(
                          column(width = 2,
                                 numericInput(inputId = "PCR_tube_volume", label = "Reaction volume", value = 25, min = 0, max = 200, step = 1)
@@ -53,26 +53,27 @@ ui <- fluidPage(
                          )
                        ),
                        fixedRow(
-                         column(width = 2,
+                         column(width = 3,
                                 h4("Reagent")
-                                ),
+                         ),
                          column(width = 2,
                                 h4("Working Stock")
-                                ),
+                         ),
                          column(width = 2, offset = 1,
                                 h4("PCR conc.")
-                                ),
+                         ),
                          column(width = 2, offset = 1,
                                 h4("uL/reaction")
-                                )
+                         )
                        ),
                        fixedRow(
-                         column(width = 2,
-                                strong("Forward primer")
+                         column(width = 3,
+                                checkboxInput(inputId = "P1_check", label = strong("Forward primer"), value = TRUE)
+                                
                          ),
                          column(width = 2,
                                 numericInput(inputId = "Fprimer_working_concentration", label = NULL, value = 10, min = 0, max = 1000, step = 1)
-                                ),
+                         ),
                          column(width = 1, 
                                 p("uM", style="padding-top:5px;padding-bottom:5px;padding-left;0px")
                          ),
@@ -92,10 +93,9 @@ ui <- fluidPage(
                          )
                        ),
                        fixedRow(
-                         column(width = 2,
-                                strong("Reverse primer")
+                         column(width = 3,
+                                checkboxInput(inputId = "P2_check", label = strong("Reverse primer"), value = TRUE)
                          ),
-                         
                          column(width = 2,
                                 numericInput(inputId = "Rprimer_working_concentration", label = NULL, value = 10, min = 0, max = 1000, step = 1)
                          ),
@@ -118,8 +118,33 @@ ui <- fluidPage(
                          )
                        ),
                        fixedRow(
+                         column(width = 3,
+                                checkboxInput(inputId = "P3_check", label = strong("Third primer/probe"), value = FALSE)
+                         ),
                          column(width = 2,
-                                strong("Magnesium Chloride")
+                                numericInput(inputId = "Probe_working_concentration", label = NULL, value = 10, min = 0, max = 1000, step = 1)
+                         ),
+                         column(width = 1, 
+                                p("uM", style="padding-top:5px;padding-bottom:5px;padding-left;0px")
+                         ),
+                         column(width = 2,
+                                numericInput(inputId = "Probe_PCR_concentration", label = NULL, value = 1, min = 0, max = 10, step = 0.01)
+                         ),
+                         column(width = 1, 
+                                p("uM", style="padding-top:5px;padding-bottom:5px;padding-left;0px")
+                         ),
+                         column(width = 1, align = "right",
+                                div(style="padding-top:5px;padding-bottom:5px;padding-left;0px",
+                                    textOutput("Probe_PCR_volume_sample")
+                                )
+                         ),
+                         column(width = 1, 
+                                p("uL", style="padding-top:5px;padding-bottom:5px;padding-left;0px")
+                         )
+                       ),
+                       fixedRow(
+                         column(width = 3,
+                                checkboxInput(inputId = "MgCl_check", label = strong("Magnesium Chloride"), value = TRUE)
                          ),
                          column(width = 2,
                                 numericInput(inputId = "MgCl_working_concentration", label = NULL, value = 25, min = 0, max = 1000, step = 1)
@@ -135,7 +160,7 @@ ui <- fluidPage(
                          ),
                          column(width = 1, align = "right",
                                 div(style="padding-top:5px;padding-bottom:5px;padding-left;0px",
-                                  textOutput("MgCl_PCR_volume_sample")
+                                    textOutput("MgCl_PCR_volume_sample")
                                 )
                          ),
                          column(width = 1, 
@@ -143,8 +168,8 @@ ui <- fluidPage(
                          )
                        ),
                        fixedRow(
-                         column(width = 2,
-                                strong("dNTPs")
+                         column(width = 3,
+                                checkboxInput(inputId = "dNTP_check", label = strong("dNTPs"), value = TRUE)
                          ),
                          column(width = 2,
                                 numericInput(inputId = "dNTP_working_concentration", label = NULL, value = 1.25, min = 0, max = 50, step = 0.01)
@@ -160,7 +185,7 @@ ui <- fluidPage(
                          ),
                          column(width = 1, align = "right",
                                 div(style="padding-top:5px;padding-bottom:5px;padding-left;0px",
-                                  textOutput("dNTP_PCR_volume_sample")
+                                    textOutput("dNTP_PCR_volume_sample")
                                 )
                          ),
                          column(width = 1, 
@@ -168,8 +193,8 @@ ui <- fluidPage(
                          )
                        ),
                        fixedRow(
-                         column(width = 2,
-                                strong("PCR Buffer")
+                         column(width = 3,
+                                checkboxInput(inputId = "buffer_check", label = strong("PCR Buffer"), value = TRUE)
                          ),
                          column(width = 2,
                                 numericInput(inputId = "buffer_working_concentration", label = NULL, value = 5, min = 0, max = 1000, step = 1)
@@ -185,7 +210,7 @@ ui <- fluidPage(
                          ),
                          column(width = 1, align = "right",
                                 div(style="padding-top:5px;padding-bottom:5px;padding-left;0px",
-                                  textOutput("buffer_PCR_volume_sample")
+                                    textOutput("buffer_PCR_volume_sample")
                                 )
                          ),
                          column(width = 1, 
@@ -193,8 +218,8 @@ ui <- fluidPage(
                          )
                        ),
                        fixedRow(
-                         column(width = 2,
-                                strong("PCR Enzyme")
+                         column(width = 3,
+                                checkboxInput(inputId = "enzyme_check", label = strong("PCR Enzyme"), value = TRUE)
                          ),
                          column(width = 2,
                                 numericInput(inputId = "enzyme_working_concentration", label = NULL, value = 5, min = 0, max = 100, step = 0.01)
@@ -210,7 +235,32 @@ ui <- fluidPage(
                          ),
                          column(width = 1, align = "right",
                                 div(style="padding-top:5px;padding-bottom:5px;padding-left;0px",
-                                  textOutput("enzyme_PCR_volume_sample")
+                                    textOutput("enzyme_PCR_volume_sample")
+                                )
+                         ),
+                         column(width = 1, 
+                                p("uL", style="padding-top:5px;padding-bottom:5px;padding-left;0px")
+                         )
+                       ),
+                       fixedRow(
+                         column(width = 3,
+                                checkboxInput(inputId = "dye_check", label = strong("DNA dye"), value = FALSE)
+                         ),
+                         column(width = 2,
+                                numericInput(inputId = "dye_working_concentration", label = NULL, value = 50, min = 0, max = 1000, step = 1)
+                         ),
+                         column(width = 1, 
+                                p("uM", style="padding-top:5px;padding-bottom:5px;padding-left;0px")
+                         ),
+                         column(width = 2,
+                                numericInput(inputId = "dye_PCR_concentration", label = NULL, value = 5, min = 0, max = 100, step = 0.1)
+                         ),
+                         column(width = 1, 
+                                p("uM", style="padding-top:5px;padding-bottom:5px;padding-left;0px")
+                         ),
+                         column(width = 1, align = "right",
+                                div(style="padding-top:5px;padding-bottom:5px;padding-left;0px",
+                                    textOutput("dye_PCR_volume_sample")
                                 )
                          ),
                          column(width = 1, 
@@ -221,9 +271,9 @@ ui <- fluidPage(
                          column(width = 2,
                                 strong("Water")
                          ),
-                         column(width = 1, offset = 6,  align = "right",
+                         column(width = 1, offset = 7,  align = "right",
                                 div(style="padding-top:5px;padding-bottom:5px;padding-left;0px",
-                                  textOutput("water_PCR_volume_sample")
+                                    textOutput("water_PCR_volume_sample")
                                 )
                          ),
                          column(width = 1, 
@@ -232,18 +282,16 @@ ui <- fluidPage(
                        ),
                        tags$hr(style="border-color: black;"),
                        fixedRow(
-                         column(width = 4,
+                         column(width = 6,
                                 tableOutput(outputId = "PCR_setup_table")
                          ),
                          column(width = 4,
                                 em(textOutput("PCR_volume_instructions")),
-                                downloadButton(outputId = "PCR_protocol_download_tsv", label = "Save protocol to sheet"),
+                                downloadButton(outputId = "PCR_protocol_download_tsv", label = "Save protocol to sheet (tsv)"),
                                 p(),
-                                downloadButton(outputId = "PCR_protocol_download_xlsx", label = "Save protocol to excel")
+                                downloadButton(outputId = "PCR_protocol_download_xlsx", label = "Save protocol to excel (xlsx)")
                          )
                        )
-                       
-                       
               ),
               tabPanel(title = "Primer dilutions", icon = NULL,
                        verticalLayout(
@@ -351,44 +399,97 @@ Volume1Calc <- function(C1,C2,V2) {
 server <- function(input, output, session) {
   # SERVER code for PCR protocol tab
   Fprimer_vol_reactive <- reactive({
-    Volume1Calc(V2 = input$PCR_tube_volume, C1 = input$Fprimer_working_concentration, C2 = input$Fprimer_PCR_concentration)
-    })
+    if (input$P1_check == TRUE) {
+      Volume1Calc(V2 = input$PCR_tube_volume, C1 = input$Fprimer_working_concentration, C2 = input$Fprimer_PCR_concentration)
+    } else {
+      0
+    }
+  })
   Rprimer_vol_reactive <- reactive({
-    Volume1Calc(V2 = input$PCR_tube_volume, C1 = input$Rprimer_working_concentration, C2 = input$Rprimer_PCR_concentration)
-    })
+    if (input$P2_check == TRUE) {
+      Volume1Calc(V2 = input$PCR_tube_volume, C1 = input$Rprimer_working_concentration, C2 = input$Rprimer_PCR_concentration)
+    } else {
+      0
+    }
+  })
+  Probe_vol_reactive <- reactive({
+    if (input$P3_check == TRUE) {
+      Volume1Calc(V2 = input$PCR_tube_volume, C1 = input$Probe_working_concentration, C2 = input$Probe_PCR_concentration)
+    } else {
+      0
+    }
+  })
   MgCl_vol_reactive <- reactive({
-    Volume1Calc(V2 = input$PCR_tube_volume, C1 = input$MgCl_working_concentration, C2 = input$MgCl_PCR_concentration)
-    })
+    if (input$MgCl_check == TRUE) {
+      Volume1Calc(V2 = input$PCR_tube_volume, C1 = input$MgCl_working_concentration, C2 = input$MgCl_PCR_concentration)
+    } else {
+      0
+    }
+  })
   dNTP_vol_reactive <- reactive({
-    Volume1Calc(V2 = input$PCR_tube_volume, C1 = input$dNTP_working_concentration * 1000, C2 = input$dNTP_PCR_concentration)
-    })
+    if (input$dNTP_check == TRUE) {
+      Volume1Calc(V2 = input$PCR_tube_volume, C1 = input$dNTP_working_concentration * 1000, C2 = input$dNTP_PCR_concentration)
+    } else {
+      0
+    }
+  })
   buffer_vol_reactive <- reactive({
-    Volume1Calc(V2 = input$PCR_tube_volume, C1 = input$buffer_working_concentration, C2 = input$buffer_PCR_concentration)
-    })
+    if (input$buffer_check == TRUE) {
+      Volume1Calc(V2 = input$PCR_tube_volume, C1 = input$buffer_working_concentration, C2 = input$buffer_PCR_concentration)
+    } else {
+      0
+    }    
+  })
   enzyme_vol_reactive <- reactive({
-    Volume1Calc(V2 = input$PCR_tube_volume, C1 = input$enzyme_working_concentration, C2 = input$enzyme_PCR_concentration)
-    })
+    if (input$enzyme_check == TRUE) {
+      Volume1Calc(V2 = input$PCR_tube_volume, C1 = input$enzyme_working_concentration, C2 = input$enzyme_PCR_concentration)
+    } else {
+      0
+    } 
+  })
+  dye_vol_reactive <- reactive({
+    if (input$dye_check == TRUE) {
+      Volume1Calc(V2 = input$PCR_tube_volume, C1 = input$dye_working_concentration, C2 = input$dye_PCR_concentration)
+    } else {
+      0
+    }   
+  })
   water_vol_reactive <- reactive({
-    input$PCR_tube_volume - input$Template_volume - Fprimer_vol_reactive() - Rprimer_vol_reactive() - MgCl_vol_reactive() - dNTP_vol_reactive() - buffer_vol_reactive() - enzyme_vol_reactive()
-    })
+    vol <- input$PCR_tube_volume - input$Template_volume
+    vol <- vol - Fprimer_vol_reactive()
+    vol <- vol - Rprimer_vol_reactive()
+    vol <- vol - Probe_vol_reactive()
+    vol <- vol - MgCl_vol_reactive()
+    vol <- vol - dNTP_vol_reactive()
+    vol <- vol - buffer_vol_reactive()
+    vol <- vol - enzyme_vol_reactive()
+    vol <- vol - dye_vol_reactive()
+    vol
+  })
   output$Fprimer_PCR_volume_sample <- renderText({
     Fprimer_vol_reactive()
-    })
+  })
   output$Rprimer_PCR_volume_sample <- renderText({
     Rprimer_vol_reactive()
-    })
+  })
+  output$Probe_PCR_volume_sample <- renderText({
+    Probe_vol_reactive()
+  })
   output$MgCl_PCR_volume_sample <- renderText({
     MgCl_vol_reactive()
-    })
+  })
   output$dNTP_PCR_volume_sample <- renderText({
     dNTP_vol_reactive()
-    })
+  })
   output$buffer_PCR_volume_sample <- renderText({
     buffer_vol_reactive()
-    })
+  })
   output$enzyme_PCR_volume_sample <- renderText({
     enzyme_vol_reactive()
-    })
+  })
+  output$dye_PCR_volume_sample <- renderText({
+    dye_vol_reactive()
+  })
   output$water_PCR_volume_sample <- renderText({
     water_vol_reactive()
   })
@@ -400,23 +501,49 @@ server <- function(input, output, session) {
     }
   })
   PCR_table_reactive <- reactive({
-    sum_PCR_Vol <- sum(Fprimer_vol_reactive(), Rprimer_vol_reactive(), MgCl_vol_reactive(), dNTP_vol_reactive(), buffer_vol_reactive(), enzyme_vol_reactive(), water_vol_reactive(), na.rm = TRUE) * PCR_multiplier()
-    (
-        PCRtable <- data.table(
-        Reagent = c("Forward Primer", "Reverse Primer", "MgCl", "dNTP", "Buffer", "Enzyme", "Water", "Total"),
-        Conc. = c(paste(input$Fprimer_PCR_concentration, "uM"),paste(input$Rprimer_PCR_concentration, "uM"),paste(input$MgCl_PCR_concentration, "mM"),paste(input$dNTP_PCR_concentration, "uM"),paste(input$buffer_PCR_concentration, "X"),paste(input$enzyme_PCR_concentration, "U/uL"),"",""),
-        Volume = c(c(Fprimer_vol_reactive(), Rprimer_vol_reactive(), MgCl_vol_reactive(), dNTP_vol_reactive(), buffer_vol_reactive(), enzyme_vol_reactive(), water_vol_reactive()) * PCR_multiplier(), c(sum_PCR_Vol)),
-        uL = c("uL")
-        )
+    sum_PCR_Vol <- sum(Fprimer_vol_reactive(), Rprimer_vol_reactive(),Probe_vol_reactive(), MgCl_vol_reactive(), dNTP_vol_reactive(), buffer_vol_reactive(), enzyme_vol_reactive(), dye_vol_reactive(), water_vol_reactive(), na.rm = TRUE) * PCR_multiplier()
+    PCRtable <- data.table(
+      Reagent = c(if (Fprimer_vol_reactive() > 0) {"Forward Primer"},
+                  if (Rprimer_vol_reactive() > 0) {"Reverse Primer"},
+                  if (Probe_vol_reactive() > 0) {"Probe/Primer"}, 
+                  if (MgCl_vol_reactive() > 0) {"MgCl"},
+                  if (dNTP_vol_reactive() > 0) {"dNTP"},
+                  if (buffer_vol_reactive() > 0) {"Buffer"},
+                  if (enzyme_vol_reactive() > 0) {"Enzyme"},
+                  if (dye_vol_reactive() > 0) {"Dye"},
+                  if (water_vol_reactive() > 0) {"Water"}, "Total"),
+      Conc. = c(if (Fprimer_vol_reactive() > 0) {paste(input$Fprimer_PCR_concentration, "uM")},
+                if (Rprimer_vol_reactive() > 0) {paste(input$Rprimer_PCR_concentration, "uM")},
+                if (Probe_vol_reactive() > 0) {paste(input$Probe_PCR_concentration, "uM")},
+                if (MgCl_vol_reactive() > 0) {paste(input$MgCl_PCR_concentration, "mM")},
+                if (dNTP_vol_reactive() > 0) {paste(input$dNTP_PCR_concentration, "uM")},
+                if (buffer_vol_reactive() > 0) {paste(input$buffer_PCR_concentration, "X")},
+                if (enzyme_vol_reactive() > 0) {paste(input$enzyme_PCR_concentration, "U/uL")},
+                if (dye_vol_reactive() > 0) {paste(input$dye_PCR_concentration, "uM")},"",""),
+      Volume = c(c(if (Fprimer_vol_reactive() > 0) {Fprimer_vol_reactive()},
+                   if (Rprimer_vol_reactive() > 0) {Rprimer_vol_reactive()},
+                   if (Probe_vol_reactive() > 0) {Probe_vol_reactive()},
+                   if (MgCl_vol_reactive() > 0) {MgCl_vol_reactive()},
+                   if (dNTP_vol_reactive() > 0) {dNTP_vol_reactive()},
+                   if (buffer_vol_reactive() > 0) {buffer_vol_reactive()},
+                   if (enzyme_vol_reactive() > 0) {enzyme_vol_reactive()},
+                   if (dye_vol_reactive() > 0) {dye_vol_reactive()},
+                   if (water_vol_reactive() > 0) {water_vol_reactive()}) * PCR_multiplier(),
+                 c(sum_PCR_Vol)),
+      uL = c("uL")
     )
   })
   
   output$PCR_setup_table <- renderTable({
     PCR_table_reactive()
   })
+  
+  
+  
   output$PCR_volume_instructions <- renderText({
     paste("Add", input$PCR_tube_volume - input$Template_volume, "uL of mastermix per tube")
   })
+  
   output$PCR_protocol_download_tsv <- downloadHandler(
     filename = function() {
       paste("PCR_protocol_", Sys.Date(), ".tsv", sep = "")
@@ -425,6 +552,7 @@ server <- function(input, output, session) {
       write_tsv(PCR_table_reactive(), file)
     }
   )
+  
   output$PCR_protocol_download_xlsx <- downloadHandler(
     filename = function() {
       paste("PCR_protocol_", Sys.Date(), ".xlsx", sep = "")
