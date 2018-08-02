@@ -5,8 +5,9 @@ account: alegione
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 325989
-bundleId: 1330928
+bundleId: 1357360
 url: https://alegione.shinyapps.io/PCR-assistant/
-when: 1524323208.51923
+when: 1525529358.43357
 asMultiple: FALSE
 asStatic: FALSE
+ignoredFiles: example.R|PCR_assistant_testpage.R
