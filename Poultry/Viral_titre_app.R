@@ -58,11 +58,10 @@ ui <- fluidPage(
               tabPanel("TCID50",
                         verticalLayout(
                           h1('Median Tissue Culture Infectious Dose'),
-                          h1('CODE NOT TESTED'),
                           h2('Input data'),
                           fluidRow(
                             column(3,
-                                   numericInput(inputId = "VolumeTCID50", label = "Inoculum (ul)", value = 0.400, min = 0, max = 2, step = 0.001)
+                                   numericInput(inputId = "VolumeTCID50", label = "Inoculum (mL)", value = 0.400, min = 0, max = 2, step = 0.001)
                             ),
 
                             column(3,
