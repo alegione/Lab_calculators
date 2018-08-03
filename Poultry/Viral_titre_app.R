@@ -2,6 +2,7 @@
 
 library(shiny)
 library(tidyverse)
+library(data.table)
 
 # Define UI for application
 ui <- fluidPage(
@@ -88,12 +89,15 @@ ui <- fluidPage(
                           h2('Results'),
                           radioButtons(inputId = "TCID50_Method", label = "Method", choices = c("Spearman-Karber", "Reed & Muench"), selected = "Spearman-Karber"),
                           verbatimTextOutput(outputId = "TCID50_text"),
-                          verbatimTextOutput(outputId = "TCID50_per_mL_text")
-                        ),
+                          verbatimTextOutput(outputId = "TCID50_per_mL_text"),
+                          column(width = 6,
+                                tableOutput(outputId = "PCR_setup_table")
+                          ),
                         verticalLayout(
                           htmlOutput(outputId = "TCID50_Method_text")
                                                   #https://www.google.com.au/url?sa=t&rct=j&q=&esrc=s&source=web&cd=2&ved=0ahUKEwiF8N22-KbaAhXGVrwKHdB6CvgQFgg0MAE&url=https%3A%2F%2Fwww.klinikum.uni-heidelberg.de%2Ffileadmin%2Finst_hygiene%2Fmolekulare_virologie%2FDownloads%2FTCID50_calculator_v2_17-01-20_MB.xlsx&usg=AOvVaw2FecwX0Pz6446j5PoL1S29
                           )
+                        )
               ),
               tabPanel("EID50",
                        verticalLayout(
@@ -117,12 +121,13 @@ ui <- fluidPage(
                             <br>Twitter: <a href = https://Twitter.com/Alegione>Twitter.com/Alegione</a>")
                        )
               )
-                       )
-                       )
+            )
+)
 
 server <- function(input, output) {
-# SERVER code for PFU tab  
-  # Average the PFU from either two or three plates, depending on the value of the plate 3 variable
+# SERVER code for PFU tab
+
+    # Average the PFU from either two or three plates, depending on the value of the plate 3 variable
   AveragePFUreactive <- reactive({
     if (input$PFUPlate1 != 0 && input$PFUPlate2 != 0){
       if (input$PFUPlate3 == -1) {
@@ -165,11 +170,12 @@ server <- function(input, output) {
     }
     flowLayout(tags, cellArgs = list())
   })
+  
   TCID50_negatives <- reactive({
     negative <- 0
     for (i in seq(from = abs(input$DilutionLowTCID50), to = abs(input$DilutionHighTCID50), by = log10(input$DilutionFactorTCID50))) {
       val <- paste0("n",i)
-      negative <- negative + (4 - (input[[val]]))
+      negative <- negative + (input$WellsTCID50 - (input[[val]]))
     }
     negative
   })
@@ -199,7 +205,7 @@ server <- function(input, output) {
 
   TCID50_reactive <- reactive({
   if ( input$TCID50_Method == "Spearman-Karber" ) {
-        abs(input$DilutionHighTCID50) + log10(input$DilutionFactorTCID50) * ( 0.5 - (1 / input$WellsTCID50) * TCID50_negatives())
+        abs(input$DilutionHighTCID50) + (0.5 * log10(input$DilutionFactorTCID50)) - ((log10(input$DilutionFactorTCID50) * TCID50_negatives()) / input$WellsTCID50)
     } else if (input$TCID50_Method == "Reed & Muench") {
       if (TCID50_midpoint()[1] == "ERROR 1") {
         "ERROR 1"
@@ -208,7 +214,7 @@ server <- function(input, output) {
         lowprop <- as.numeric(TCID50_midpoint()[2])
         highdilution <- as.numeric(TCID50_midpoint()[3])
         PD <- (highprop - 0.50)/(highprop - lowprop)
-        highdilution - (PD * log10(input$DilutionFactorTCID50))
+        highdilution + (PD * log10(input$DilutionFactorTCID50))
       }
         
     }
@@ -227,6 +233,51 @@ server <- function(input, output) {
       "ERROR (There must be one dilution either side of 50%)"
     }
   })
+  IC50results_table_reactive <- reactive({
+    highprop <- as.numeric(TCID50_midpoint()[1])
+    lowprop <- as.numeric(TCID50_midpoint()[2])
+    highdilution <- as.numeric(TCID50_midpoint()[3])
+    PD <- (highprop - 0.50)/(highprop - lowprop)
+    ID50 <- highdilution + (PD * log10(input$DilutionFactorTCID50))
+    
+      if ( input$TCID50_Method == "Spearman-Karber" ) {
+        Datatable <- data.table(
+          variables = c("Dilution Level (x)",
+                        "interval (d)",
+                        "sum of uninfected hosts",
+                         "Hosts per diltuion (n)"
+                        ),
+          values = c(abs(input$DilutionHighTCID50),
+                        log10(input$DilutionFactorTCID50),
+                        TCID50_negatives(),
+                         input$WellsTCID50
+                     )
+        )
+      } else {
+        Datatable <- data.table(
+          variables = c("% infected above 50%",
+                        "% infected below 50%",
+                        "PD",
+                        "log dilution above 50",
+                        "PD x log dilution factor"
+                       ),
+          values = c(highprop,
+                     lowprop,
+                     PD,
+                     highdilution,
+                     ID50
+                     )
+        )
+      }
+  })
+  
+  output$PCR_setup_table <- renderTable({
+    IC50results_table_reactive()
+  })
+  
+  
+  
+  
   output$TCID50_Method_text <- renderText({
     if ( input$TCID50_Method == "Spearman-Karber" ) {
          HTML("<br><u><b>Equation for calculation (Spearman-Karber formula): </b></u>
