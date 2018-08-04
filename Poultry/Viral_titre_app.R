@@ -171,6 +171,8 @@ server <- function(input, output) {
     flowLayout(tags, cellArgs = list())
   })
   
+  
+  
   TCID50_negatives <- reactive({
     negative <- 0
     for (i in seq(from = abs(input$DilutionLowTCID50), to = abs(input$DilutionHighTCID50), by = log10(input$DilutionFactorTCID50))) {
@@ -179,23 +181,47 @@ server <- function(input, output) {
     }
     negative
   })
- 
-
-  TCID50_midpoint <- reactive({
-    for (i in seq(from = abs(input$DilutionLowTCID50), to = abs(input$DilutionHighTCID50), by = log10(input$DilutionFactorTCID50))) {
+  
+   TCID50_midpoint <- reactive({
+     Reed_Muench_table <- data.table(
+                                    Dilutions = c(seq(from = input$DilutionLowTCID50, to = input$DilutionHighTCID50, by = -log10(input$DilutionFactorTCID50)))
+                                    )
+     for (i in seq(from = 1, to = nrow(Reed_Muench_table), by = 1)) {
+       val <- paste0("n",abs(Reed_Muench_table$Dilutions[i]))
+       print(paste0("val = ", val))
+       Reed_Muench_table$Dead[i] <- (input[[val]])
+     }
+     for (i in seq(from = 1, to = nrow(Reed_Muench_table), by = 1)) {
+       Reed_Muench_table$Alive[i] <- input$WellsTCID50 - Reed_Muench_table$Dead[i]
+       if (i == 1) {
+         Reed_Muench_table$Accum_Alive[i] <- Reed_Muench_table$Alive[i]
+       } else {
+         Reed_Muench_table$Accum_Alive[i] <- Reed_Muench_table$Accum_Alive[i-1] + Reed_Muench_table$Alive[i]
+       }
+       # switch <- TRUE
+     }
+     for (i in seq(from = nrow(Reed_Muench_table), to = 1, by = -1)) {
+       if (i == nrow(Reed_Muench_table)) {
+         Reed_Muench_table$Accum_Dead[i] <- Reed_Muench_table$Dead[i]
+       } else {
+         Reed_Muench_table$Accum_Dead[i] <- Reed_Muench_table$Accum_Dead[i+1] + Reed_Muench_table$Dead[i]
+       }
+       Reed_Muench_table$PercentDead[i] <- round(x = (100 * (Reed_Muench_table$Accum_Dead[i] / ( Reed_Muench_table$Accum_Dead[i] + Reed_Muench_table$Accum_Alive[i]))), digits = 2)
+       # switch <- TRUE
+     } 
+     print(Reed_Muench_table)
+    for (i in seq(from = 1, to = nrow(Reed_Muench_table), by = 1)) {
       j <- i + 1
-      valhigh <- paste0("n",i)
-      vallow <- paste0("n",j)
-      # check that you haven't got the the end
-      if ( j > abs(input$DilutionHighTCID50)) {
+      val_High <- round(x = Reed_Muench_table$PercentDead[i], digits = 0)
+      val_Low <- round(x = Reed_Muench_table$PercentDead[i+1], digits = 0)
+      # check that you haven't got to the end
+      if ( j > nrow(Reed_Muench_table)) {
         returnlist <- c("ERROR 1")
         break
       }
         
-      if ( input[[valhigh]] / input$WellsTCID50 > 0.5 && input[[vallow]] / input$WellsTCID50 < 0.5) {
-        highprop <- input[[valhigh]] / input$WellsTCID50
-        lowprop <- input[[vallow]] / input$WellsTCID50
-        returnlist <- c(highprop,lowprop, input[[valhigh]])
+      if ( val_High > 50 && val_Low < 50) {
+        returnlist <- c(val_High,val_Low, Reed_Muench_table$Dilution[i])
         break
       }
     }
@@ -208,27 +234,27 @@ server <- function(input, output) {
         abs(input$DilutionHighTCID50) + (0.5 * log10(input$DilutionFactorTCID50)) - ((log10(input$DilutionFactorTCID50) * TCID50_negatives()) / input$WellsTCID50)
     } else if (input$TCID50_Method == "Reed & Muench") {
       if (TCID50_midpoint()[1] == "ERROR 1") {
-        "ERROR 1"
+        "ERROR 1 - No values below 50%"
       } else {
         highprop <- as.numeric(TCID50_midpoint()[1])
         lowprop <- as.numeric(TCID50_midpoint()[2])
         highdilution <- as.numeric(TCID50_midpoint()[3])
-        PD <- (highprop - 0.50)/(highprop - lowprop)
-        highdilution + (PD * log10(input$DilutionFactorTCID50))
+        PD <- (highprop - 50)/(highprop - lowprop)
+        abs(highdilution - (PD * log10(input$DilutionFactorTCID50)))
       }
         
     }
   })
   output$TCID50_text <- renderText({
     if ( is.numeric(TCID50_reactive())) {
-      paste0("TCID50 = 10^", TCID50_reactive())
+      paste0("TCID50 = 10^", round(x = TCID50_reactive(), digits = 1))
     } else {
       "ERROR (There must be one dilution either side of 50%)"
     }
   })
   output$TCID50_per_mL_text <- renderText({
     if ( is.numeric(TCID50_reactive())) {
-      paste0("Titre = 10^", round(log10((10^TCID50_reactive()) / input$VolumeTCID50), 2), " TCID50/mL")
+      paste0("Titre = 10^", round(log10((10^TCID50_reactive()) / input$VolumeTCID50), 1), " TCID50/mL")
     } else {
       "ERROR (There must be one dilution either side of 50%)"
     }
@@ -237,8 +263,8 @@ server <- function(input, output) {
     highprop <- as.numeric(TCID50_midpoint()[1])
     lowprop <- as.numeric(TCID50_midpoint()[2])
     highdilution <- as.numeric(TCID50_midpoint()[3])
-    PD <- (highprop - 0.50)/(highprop - lowprop)
-    ID50 <- highdilution + (PD * log10(input$DilutionFactorTCID50))
+    PD <- (highprop - 50)/(highprop - lowprop)
+    ID50 <- abs(highdilution - (PD * log10(input$DilutionFactorTCID50)))
     
       if ( input$TCID50_Method == "Spearman-Karber" ) {
         Datatable <- data.table(
