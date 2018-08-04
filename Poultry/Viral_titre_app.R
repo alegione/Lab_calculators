@@ -14,8 +14,8 @@ ui <- fluidPage(
             tabsetPanel(
               tabPanel("PFU",
                        verticalLayout(
-                         h1('Plaque forming units'),
-                         h2('Input data'),
+                         h2('Plaque forming units'),
+                         h4('Input data'),
                          fluidRow(
                            column(3,
                                   numericInput(inputId = "PFUPlate1", label = "Plate 1", value = 0, min = 0, max = 1000, step = 1)
@@ -56,17 +56,17 @@ ui <- fluidPage(
                               inoculum volume = the original volume of inoculum added to the well in millilitres (eg 0.400 mL) <br>")
                          )
                        ),
-              tabPanel("TCID50",
+              tabPanel("Mid-point assay",
                         verticalLayout(
-                          h1('Median Tissue Culture Infectious Dose'),
-                          h2('Input data'),
+                          h2('Mid-point assay (e.g. Median Tissue Culture Infectious Dose)'),
+                          h4('Input data'),
                           fluidRow(
                             column(3,
                                    numericInput(inputId = "VolumeTCID50", label = "Inoculum (mL)", value = 0.400, min = 0, max = 2, step = 0.001)
                             ),
 
                             column(3,
-                                   numericInput(inputId = "WellsTCID50", label = "Wells inoculated per dilution", value = 4, min = 2, max = 12, step = 1)
+                                   numericInput(inputId = "WellsTCID50", label = "Inoculated per dilution", value = 4, min = 2, max = 12, step = 1)
                             )
                           ),
                           fluidRow(
@@ -82,16 +82,16 @@ ui <- fluidPage(
                           )
                         ),
                        verticalLayout(
-                         h3('Number of infected wells')
+                         h4('Number of affected samples (e.g. cytopathic effect)')
                        ),
-                       uiOutput("DilutionSeries"),
+                       uiOutput("ID50_DilutionSeries"),
                         verticalLayout(
                           h2('Results'),
                           radioButtons(inputId = "TCID50_Method", label = "Method", choices = c("Spearman-Karber", "Reed & Muench"), selected = "Spearman-Karber"),
                           verbatimTextOutput(outputId = "TCID50_text"),
                           verbatimTextOutput(outputId = "TCID50_per_mL_text"),
                           column(width = 6,
-                                tableOutput(outputId = "PCR_setup_table")
+                                tableOutput(outputId = "Variable_table")
                           ),
                         verticalLayout(
                           htmlOutput(outputId = "TCID50_Method_text")
@@ -99,24 +99,26 @@ ui <- fluidPage(
                           )
                         )
               ),
-              tabPanel("EID50",
-                       verticalLayout(
-                         h1('Median Egg Infectious Dose'),
-                         paste("Code still to come")
-                       )
-              ),
-              tabPanel("LD50",
-                       verticalLayout(
-                         h1('Median Lethal Dose'),
-                         paste("Code still to come")
-                       )
-              ),
+              # tabPanel("EID50",
+              #          verticalLayout(
+              #            h1('Median Egg Infectious Dose'),
+              #            paste("Code still to come"),
+              #            uiOutput(outputId = "ID50_plate")
+              #          )
+              # ),
+              # tabPanel("LD50",
+              #          verticalLayout(
+              #            h1('Median Lethal Dose'),
+              #            paste("Code still to come")
+              #          )
+              # ),
               tabPanel(title = "Documentation",
                        p(h4("Virus titration calculators")),
                        HTML("This app includes an array of quick calculators for virology work
                             <br>The formulas for each tool are included in their respective tabs
                             <br>
                             <br>Please report errors or request changes:
+                            <br>Website: <a href = https://alegione.github.io/>alegione.github</a>
                             <br>Github: <a href = https://github.com/Alegione>Github.com/Alegione</a>
                             <br>Twitter: <a href = https://Twitter.com/Alegione>Twitter.com/Alegione</a>")
                        )
@@ -163,13 +165,15 @@ server <- function(input, output) {
     }
   })
 #SERVER code for TCID50
-  output$DilutionSeries <- renderUI({
+  output$ID50_DilutionSeries <- renderUI({
     tags <- tagList()
     for (i in seq(from = abs(input$DilutionLowTCID50), to = abs(input$DilutionHighTCID50), by = log10(input$DilutionFactorTCID50))) {
       tags[[i]] <- numericInput(inputId = paste0('n', i), label = paste0('10^-', i, " (n / ", input$WellsTCID50, ")"), value = input$WellsTCID50, min = 0, max = input$WellsTCID50, step = 1)
     }
     flowLayout(tags, cellArgs = list())
   })
+  
+  
   
   TCID50_negatives <- reactive({
     negative <- 0
@@ -179,23 +183,47 @@ server <- function(input, output) {
     }
     negative
   })
- 
-
-  TCID50_midpoint <- reactive({
-    for (i in seq(from = abs(input$DilutionLowTCID50), to = abs(input$DilutionHighTCID50), by = log10(input$DilutionFactorTCID50))) {
+  
+   TCID50_midpoint <- reactive({
+     Reed_Muench_table <- data.table(
+                                    Dilutions = c(seq(from = input$DilutionLowTCID50, to = input$DilutionHighTCID50, by = -log10(input$DilutionFactorTCID50)))
+                                    )
+     for (i in seq(from = 1, to = nrow(Reed_Muench_table), by = 1)) {
+       val <- paste0("n",abs(Reed_Muench_table$Dilutions[i]))
+       print(paste0("val = ", val))
+       Reed_Muench_table$Dead[i] <- (input[[val]])
+     }
+     for (i in seq(from = 1, to = nrow(Reed_Muench_table), by = 1)) {
+       Reed_Muench_table$Alive[i] <- input$WellsTCID50 - Reed_Muench_table$Dead[i]
+       if (i == 1) {
+         Reed_Muench_table$Accum_Alive[i] <- Reed_Muench_table$Alive[i]
+       } else {
+         Reed_Muench_table$Accum_Alive[i] <- Reed_Muench_table$Accum_Alive[i-1] + Reed_Muench_table$Alive[i]
+       }
+       # switch <- TRUE
+     }
+     for (i in seq(from = nrow(Reed_Muench_table), to = 1, by = -1)) {
+       if (i == nrow(Reed_Muench_table)) {
+         Reed_Muench_table$Accum_Dead[i] <- Reed_Muench_table$Dead[i]
+       } else {
+         Reed_Muench_table$Accum_Dead[i] <- Reed_Muench_table$Accum_Dead[i+1] + Reed_Muench_table$Dead[i]
+       }
+       Reed_Muench_table$PercentDead[i] <- round(x = (100 * (Reed_Muench_table$Accum_Dead[i] / ( Reed_Muench_table$Accum_Dead[i] + Reed_Muench_table$Accum_Alive[i]))), digits = 2)
+       # switch <- TRUE
+     } 
+     print(Reed_Muench_table)
+    for (i in seq(from = 1, to = nrow(Reed_Muench_table), by = 1)) {
       j <- i + 1
-      valhigh <- paste0("n",i)
-      vallow <- paste0("n",j)
-      # check that you haven't got the the end
-      if ( j > abs(input$DilutionHighTCID50)) {
+      val_High <- round(x = Reed_Muench_table$PercentDead[i], digits = 0)
+      val_Low <- round(x = Reed_Muench_table$PercentDead[i+1], digits = 0)
+      # check that you haven't got to the end
+      if ( j > nrow(Reed_Muench_table)) {
         returnlist <- c("ERROR 1")
         break
       }
         
-      if ( input[[valhigh]] / input$WellsTCID50 > 0.5 && input[[vallow]] / input$WellsTCID50 < 0.5) {
-        highprop <- input[[valhigh]] / input$WellsTCID50
-        lowprop <- input[[vallow]] / input$WellsTCID50
-        returnlist <- c(highprop,lowprop, input[[valhigh]])
+      if ( val_High > 50 && val_Low < 50) {
+        returnlist <- c(val_High,val_Low, Reed_Muench_table$Dilution[i])
         break
       }
     }
@@ -208,27 +236,27 @@ server <- function(input, output) {
         abs(input$DilutionHighTCID50) + (0.5 * log10(input$DilutionFactorTCID50)) - ((log10(input$DilutionFactorTCID50) * TCID50_negatives()) / input$WellsTCID50)
     } else if (input$TCID50_Method == "Reed & Muench") {
       if (TCID50_midpoint()[1] == "ERROR 1") {
-        "ERROR 1"
+        "ERROR 1 - No values below 50%"
       } else {
         highprop <- as.numeric(TCID50_midpoint()[1])
         lowprop <- as.numeric(TCID50_midpoint()[2])
         highdilution <- as.numeric(TCID50_midpoint()[3])
-        PD <- (highprop - 0.50)/(highprop - lowprop)
-        highdilution + (PD * log10(input$DilutionFactorTCID50))
+        PD <- (highprop - 50)/(highprop - lowprop)
+        abs(highdilution - (PD * log10(input$DilutionFactorTCID50)))
       }
         
     }
   })
   output$TCID50_text <- renderText({
     if ( is.numeric(TCID50_reactive())) {
-      paste0("TCID50 = 10^", TCID50_reactive())
+      paste0("Midpoint value = 10^", round(x = TCID50_reactive(), digits = 1))
     } else {
       "ERROR (There must be one dilution either side of 50%)"
     }
   })
   output$TCID50_per_mL_text <- renderText({
     if ( is.numeric(TCID50_reactive())) {
-      paste0("Titre = 10^", round(log10((10^TCID50_reactive()) / input$VolumeTCID50), 2), " TCID50/mL")
+      paste0("Titre = 10^", round(log10((10^TCID50_reactive()) / input$VolumeTCID50), 1), " TCID50/mL")
     } else {
       "ERROR (There must be one dilution either side of 50%)"
     }
@@ -237,20 +265,20 @@ server <- function(input, output) {
     highprop <- as.numeric(TCID50_midpoint()[1])
     lowprop <- as.numeric(TCID50_midpoint()[2])
     highdilution <- as.numeric(TCID50_midpoint()[3])
-    PD <- (highprop - 0.50)/(highprop - lowprop)
-    ID50 <- highdilution + (PD * log10(input$DilutionFactorTCID50))
+    PD <- (highprop - 50)/(highprop - lowprop)
+    ID50 <- abs(highdilution - (PD * log10(input$DilutionFactorTCID50)))
     
       if ( input$TCID50_Method == "Spearman-Karber" ) {
         Datatable <- data.table(
           variables = c("Dilution Level (x)",
-                        "interval (d)",
-                        "sum of uninfected hosts",
-                         "Hosts per diltuion (n)"
+                        "Interval (d)",
+                        "Sum of uninfected hosts",
+                        "Hosts per diltuion (n)"
                         ),
           values = c(abs(input$DilutionHighTCID50),
                         log10(input$DilutionFactorTCID50),
                         TCID50_negatives(),
-                         input$WellsTCID50
+                        input$WellsTCID50
                      )
         )
       } else {
@@ -271,7 +299,7 @@ server <- function(input, output) {
       }
   })
   
-  output$PCR_setup_table <- renderTable({
+  output$Variable_table <- renderTable({
     IC50results_table_reactive()
   })
   
@@ -298,14 +326,34 @@ server <- function(input, output) {
             TCID50/mL = TCID50 / inoculum volume (mL)<p>
             where: <br>
             PD = proportionate distance between two dilutions<br>
-            %>50% = the percentage of wells infected at the dilution above 50%<br>
-            %<50% = the percentage of wells infected at the dilution below 50%<br>
+            %>50% = cumulative percentage of affected samples/hosts at the dilution above 50%<br>
+            %<50% = cumulative percentage of affected samples/hosts at the dilution below 50%<br>
             highest dilution = The value of the highest exponent as an absolute integer <br>
             <p style='margin-left: 110px'>e.g. in a serial ten fold dilution where the two values either side of 50% were 10^-3 to 10^-4, the value would be 3</p>")
 
       }
   })
-}
+## SERVER CODE FOR PLATE LAYOUT
+output$ID50_plate <- renderUI({
+  tags$head(
+    tags$style(type="text/css", "#inline label{ display: table-cell; text-align: center; vertical-align: middle; } 
+                #inline .form-group { display: table-row;}")
+  )
+  checks <- tagList()
+  for (i in seq(from = 1, to = (input$DilutionLowTCID50-input$DilutionHighTCID50), by = 1)) {
+    checks[[i]] <- flowLayout(
+      paste0(i),
+      tags$div(id = "inline", checkboxGroupInput(inputId = paste0("dil-",input$DilutionHighTCID50+i-1), label = 1, inline = TRUE, choices = paste0("well", 1:input$WellsTCID50)))
+      )
+  }
+  flowLayout(checks, cellArgs = list())
+})
 
+}
+# tags <- tagList()
+# for (i in seq(from = abs(input$DilutionLowTCID50), to = abs(input$DilutionHighTCID50), by = log10(input$DilutionFactorTCID50))) {
+#   tags[[i]] <- numericInput(inputId = paste0('n', i), label = paste0('10^-', i, " (n / ", input$WellsTCID50, ")"), value = input$WellsTCID50, min = 0, max = input$WellsTCID50, step = 1)
+# }
+# flowLayout(tags, cellArgs = list())
 # Run the application 
 shinyApp(ui = ui, server = server)
