@@ -1,7 +1,8 @@
 This is a collection of virological calculator shiny apps
   + Plaque forming unit calculator
-  + Median tissue culture infectious dose (still to come)
-  + Median egg infectious dose (still to come)
-  + Median lethal dose (still to come)
+  + Mid-point assays, including:
+    + Median tissue culture infectious dose (TCID50)
+    + Median egg infectious dose (EID50)
+    + Median lethal dose (LD50)
 
 https://alegione.shinyapps.io/Virus_Titration_Calculators/
