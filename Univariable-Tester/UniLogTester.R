@@ -1,7 +1,6 @@
 library(tidyverse)
 library(xlsx)
 library(DT)
-library(exact2x2)
 
 
 # Define UI for application
@@ -46,6 +45,7 @@ ui <- fluidPage(
                          )
                        )
               ),
+              # 2x2 table GUI ----
               tabPanel(title = "2x2 table", icon = NULL,
                        fluidRow(
                          column(width = 2, offset = 3, h4("Outcome"))
@@ -77,7 +77,9 @@ ui <- fluidPage(
                          column(width = 2, textOutput(outputId = "Total_5")),
                          NULL
                        ),
-                       
+                       verticalLayout(actionButton(inputId = "compute", label = "Results")),
+                       verticalLayout(verbatimTextOutput(outputId = "Results", placeholder = TRUE)),
+                       verticalLayout(plotOutput(outputId = "ResultPlot")),
                        NULL
               )
             )
@@ -92,6 +94,9 @@ ui <- fluidPage(
 
 
 server <- function(input, output, session) {
+  
+  
+  
   TableData <- reactive({
     inFile <- input$DataTableLoad
     if (is.null(inFile)) {
@@ -106,14 +111,16 @@ server <- function(input, output, session) {
   #   TableData <- read.table("http://s3.amazonaws.com/assets.datacamp.com/production/course_2218/datasets/alc.txt", sep  =",", header = T)
   #   output$DataTableShow <- DT::renderDataTable(TableData())
   # })
-  #SERVER code for data display
+  
+  #Server code for data display ----
   
   output$DataTableShow <- DT::renderDataTable(TableData())
   
   
   
-  #SERVER code for 2x2 table
+  #Server code for 2x2 table ----
   
+  #tableStatistics
   output$Total_1 <- reactive({
     (input$cellA + input$cellB)
   })
@@ -129,6 +136,59 @@ server <- function(input, output, session) {
   output$Total_5 <- reactive({
     (input$cellA + input$cellB + input$cellC + input$cellD)
   })
+  
+  TableStats <- function(a, b, c, d) {
+    p1 <- a / (a + b)
+    p2 <- c / (c + d)
+    #Risk difference
+    RD <- p1 - p2
+    SERD <- sqrt(p1*(1-p1)/(a+b)+p2*(1-p2)/(c+d))
+    RDLow_ninefive_CI <- (RD - 1.96 * SERD)
+    RDHigh_ninefive_CI <- (RD + 1.96 * SERD)
+    #estimated risk difference 100*RD +/- 95CI
+    
+    #Risk Ratio
+    RR <- p1/p2
+    SERR <- sqrt((1-p1)/a+(1-p2)/c)
+    RRLow_ninefive_CI <- RR * exp(-1.96 * SERR)
+    RRHigh_ninefive_CI <- RR * exp(1.96 * SERR)
+    #estimated risk ratio RR +/- 95CI
+    
+    #Odds Ratio
+    CaseExposureOdds <- a/c
+    ControlExposureOdds <- b/d
+    OR <- CaseExposureOdds/ControlExposureOdds
+    SEOR <- sqrt((1/a+1/b+1/c+1/d))
+    ORLow_ninefive_CI <- OR * exp(-1.96 * SEOR)
+    ORHigh_ninefive_CI <- OR * exp(1.96 * SEOR)
+    #estimated risk ratio OR +/- 95CI
+    
+    table2x2 <- matrix(data = c(a,b,c,d), nrow = 2, ncol = 2, byrow = TRUE)
+    fish <- fisher.test(x = table2x2)
+    
+    resultsList <- list("RiskDiff" = RD, "RiskDiff95Lo" = RDLow_ninefive_CI, "RiskDiff95Hi" = RDHigh_ninefive_CI,
+         "RiskRatio" = RR, "RiskRatio95Lo" = RRLow_ninefive_CI, "RiskRatio95Hi" = RRHigh_ninefive_CI, 
+         "OddsRatio" = OR, "OddsRatio95Lo" = ORLow_ninefive_CI, "OddsRatio95Hi" = ORHigh_ninefive_CI, "Fishers" = fish)
+
+    
+    return(resultsList)
+  }
+  stat_return <- eventReactive(
+    input$compute, {
+      options(scipen=999)
+      stats <- TableStats(a = input$cellA, b = input$cellB, c = input$cellC, d = input$cellD)
+      line1 <- paste0("Estimated risk difference = ", round(100*stats$RiskDiff, 2), "% (95% CI: ", round(100*stats$RiskDiff95Lo, 2), ", ", round(100*stats$RiskDiff95Hi, 2), ")")
+      line2 <- paste0("Estimated risk ratio = ", round(stats$RiskRatio, 2), " (95% CI: ", round(stats$RiskRatio95Lo, 2), ", ", round(stats$RiskRatio95Hi, 2), ")")
+      line3 <- paste0("Estimated odds ratio = ", round(stats$OddsRatio, 2), " (95% CI: ", round(stats$OddsRatio95Lo, 2), ", ", round(stats$OddsRatio95Hi, 2), ")")
+      line4 <- paste0("Fisher's Exact test for Count Data")
+      line5 <- paste0("Odds Ratio = ", round(stats$Fishers$estimate["odds ratio"], 3), " (95% CI: ", round(stats$Fishers$conf.int[1],2), ", ", round(stats$Fishers$conf.int[2], 2), ")")
+      line6 <- paste0("p-value = ", stats$Fishers$p.value)
+      return(cat(line1,line2,line3,line4,line5,line6, sep = "\n"))
+    })
+  output$Results <- renderPrint({
+    return(stat_return())
+    })
+  
 }
 
 
