@@ -180,10 +180,11 @@ server <- function(input, output, session) {
       line1 <- paste0("Estimated risk difference = ", round(100*stats$RiskDiff, 2), "% (95% CI: ", round(100*stats$RiskDiff95Lo, 2), ", ", round(100*stats$RiskDiff95Hi, 2), ")")
       line2 <- paste0("Estimated risk ratio = ", round(stats$RiskRatio, 2), " (95% CI: ", round(stats$RiskRatio95Lo, 2), ", ", round(stats$RiskRatio95Hi, 2), ")")
       line3 <- paste0("Estimated odds ratio = ", round(stats$OddsRatio, 2), " (95% CI: ", round(stats$OddsRatio95Lo, 2), ", ", round(stats$OddsRatio95Hi, 2), ")")
+      linegap <- paste0("-----------------------------")
       line4 <- paste0("Fisher's Exact test for Count Data")
       line5 <- paste0("Odds Ratio = ", round(stats$Fishers$estimate["odds ratio"], 3), " (95% CI: ", round(stats$Fishers$conf.int[1],2), ", ", round(stats$Fishers$conf.int[2], 2), ")")
       line6 <- paste0("p-value = ", stats$Fishers$p.value)
-      return(cat(line1,line2,line3,line4,line5,line6, sep = "\n"))
+      return(cat(line1,line2,line3,linegap,line4,line5,line6, sep = "\n"))
     })
   output$Results <- renderPrint({
     return(stat_return())

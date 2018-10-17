@@ -5,8 +5,9 @@ account: alegione
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 316949
-bundleId: 1518010
+bundleId: 1647625
 url: https://alegione.shinyapps.io/Virus_Titration_Calculators/
-when: 1533369995.44817
+when: 1539782368.42386
 asMultiple: FALSE
 asStatic: FALSE
+ignoredFiles: README.MD
