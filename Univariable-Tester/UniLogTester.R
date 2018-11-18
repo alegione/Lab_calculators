@@ -79,7 +79,7 @@ ui <- fluidPage(
                        ),
                        verticalLayout(actionButton(inputId = "compute", label = "Results")),
                        verticalLayout(verbatimTextOutput(outputId = "Results", placeholder = TRUE)),
-                       verticalLayout(plotOutput(outputId = "ResultPlot")),
+                       verticalLayout(plotOutput(outputId = "twobytwoPlot")),
                        NULL
               )
             )
@@ -173,6 +173,39 @@ server <- function(input, output, session) {
     
     return(resultsList)
   }
+  
+  # plotInput = function() {
+  #   # generate bins based on input$bins from ui.R
+  #   plotData <- TableStats(a = input$cellA, b = input$cellB, c = input$cellC, d = input$cellD)
+  #   if (is.null(plotData)) {
+  #     return()
+  #   }
+  #   
+  #   ggplot(plotData, aes(x = Group,y = RiskRatio, ymin = LowerLimit, ymax = UpperLimit)) +
+  #     geom_pointrange(aes(col=Group)) +
+  #     geom_hline(aes(fill=Group),yintercept =1, linetype=2) +
+  #     xlab('Group')+ ylab("Risk Ratio (95% Confidence Interval)") +
+  #     geom_errorbar(aes(ymin=LowerLimit, ymax=UpperLimit,col=Group),width=0.5,cex=1) + 
+  #     facet_wrap(~Condition,strip.position="left",nrow=9,scales = "free_y") +
+  #     theme(plot.title=element_text(size=16,face="bold"),
+  #           axis.text.y=element_blank(),
+  #           axis.ticks.y=element_blank(),
+  #           axis.text.x=element_text(face="bold"),
+  #           axis.title=element_text(size=12,face="bold"),
+  #           strip.text.y = element_text(hjust=0,vjust = 1,angle=180,face="bold")) +
+  #     coord_flip() +
+  #     NULL
+  #   p
+  #     
+  # }
+  # 
+  # 
+  # output$twobytwoplot <- renderPlot(height = 600, {
+  #   plotInput()
+  # })
+   
+  
+  
   stat_return <- eventReactive(
     input$compute, {
       options(scipen=999)
