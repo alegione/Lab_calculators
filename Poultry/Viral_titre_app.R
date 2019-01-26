@@ -15,17 +15,23 @@ ui <- fluidPage(
               tabPanel("PFU",
                        verticalLayout(
                          h2('Plaque forming units'),
+                         numericInput(inputId = "wellCount", label = "How many wells?", value = 2, min = 1, max = 100, step = 1),
+                         
                          h4('Input data'),
                          fluidRow(
-                           column(3,
-                                  numericInput(inputId = "PFUPlate1", label = "Plate 1", value = 0, min = 0, max = 1000, step = 1)
-                           ),
-                           column(3, 
-                                  numericInput(inputId = "PFUPlate2", label = "Plate 2", value = 0, min = 0, max = 1000, step = 1)
-                           ),
-                           column(3,
-                                  numericInput(inputId = "PFUPlate3", label = "Plate 3 *", value = -1, min = -1, max = 1000, step = 1)
-                           )
+                          column(width = 3, offset = 1,
+                                 uiOutput(outputId = "PFU_wells", inline = TRUE)
+                                 )
+                           
+                           # column(3,
+                           #        numericInput(inputId = "PFUPlate1", label = "Plate 1", value = 0, min = 0, max = 1000, step = 1)
+                           # ),
+                           # column(3, 
+                           #        numericInput(inputId = "PFUPlate2", label = "Plate 2", value = 0, min = 0, max = 1000, step = 1)
+                           # ),
+                           # column(3,
+                           #        numericInput(inputId = "PFUPlate3", label = "Plate 3 *", value = -1, min = -1, max = 1000, step = 1)
+                           # )
                          ),
                          fluidRow(
                            column(3,
@@ -128,18 +134,23 @@ ui <- fluidPage(
 
 server <- function(input, output) {
 # SERVER code for PFU tab
-
+  output$PFU_wells <- renderUI({
+    tagsPFU <- tagList()
+    for (i in 1:input$wellCount) {
+      tagsPFU[[i]] <- numericInput(inputId = paste0('w', i), label = paste0('Well ', i), value = 0, min = 0, max = 1000, step = 1)
+    }
+    flowLayout(tagsPFU, cellArgs = list())
+  })
     # Average the PFU from either two or three plates, depending on the value of the plate 3 variable
   AveragePFUreactive <- reactive({
-    if (input$PFUPlate1 != 0 && input$PFUPlate2 != 0){
-      if (input$PFUPlate3 == -1) {
-        ((input$PFUPlate1 + input$PFUPlate2) / 2)
-      } else {
-        ((input$PFUPlate1 + input$PFUPlate2 + input$PFUPlate3) / 3)
-      }
-    } else {
-      0
+    sum <- 0
+    count <- 0
+    for (i in 1:input$wellCount) {
+      val <- paste0("w",i)
+      sum <- sum + input[[val]]
+      count <- count + 1
     }
+    sum/count
   })
   PFU_per_ml_reactive <- reactive({
     if (AveragePFUreactive() != 0){
@@ -149,20 +160,10 @@ server <- function(input, output) {
     }
   })
   output$PFU_per_mL <- renderText({
-    if (input$PFUPlate1 == 0 || input$PFUPlate2 == 0){
-      paste0("Values of at least two counts (eg Plate 1 and Plate 2) must be greater than zero")
-    } else { 
       paste0("Titre = ", round(x = PFU_per_ml_reactive(), 2), " PFU/mL\n\t10^",  round(x = log10(PFU_per_ml_reactive()), 2), " PFU/mL")
-    }
   })
   output$Average_PFU <- renderText({
-    if (input$PFUPlate1 == 0 || input$PFUPlate2 == 0){
-      paste("")
-    } else if (input$PFUPlate3 == -1) {
       paste0("Average PFU = ", round(x = AveragePFUreactive(), 2), " PFU per well")
-    } else {
-      paste0("Average PFU = ", round(x = AveragePFUreactive(), 2), " PFU per well")
-    }
   })
 #SERVER code for TCID50
   output$ID50_DilutionSeries <- renderUI({
